@@ -26,10 +26,18 @@ Built against the live sandbox API (verified 2026-05-31).
 | **Item (Catalog)** | Create · Get · Update · Search · Delete |
 | **Expense** | Create · Get · Search · Close · Open · Delete · Search Drafts · Get Statuses |
 | **Payment** | Create Payment Form · Search Links · Get Link · Search Saved Tokens · Charge Token |
+| **Recurring Payment (הוראת קבע)** | Create · Get · Update · Delete · Search · Count · Get Jobs · Recharge · Unsuspend · Distribute · Search Failed Jobs · Export |
+| **Retainer (ריטיינר)** | Create · Get · Update · Delete · Search · Count · Get Jobs · Process Job |
 | **Accounting** | Get Classifications Map |
 | **Business** | Get Me · Get Numbering · Get Footer · Get Business Types |
 
-**39 operations across 8 resources.**
+**59 operations across 10 resources.**
+
+> **Recurring Payment** and **Retainer** wrap Morning's *recurring-income* features (הכנסות קבועות). A **Recurring Payment** (`/payments/recurrings`) auto-charges a saved credit-card token on a schedule; a **Retainer** (`/retainers`) auto-issues a recurring document/payment-request to a client. These two endpoint families are **not in Morning's official (Apiary) API reference** — paths, verbs, bodies and enums were taken verbatim from Morning's own web-app client (and confirmed against a live recurring-payment response).
+>
+> Note the two resources use **different `interval` encodings**: Recurring Payment is `1` / `2` / `3` / `12` (months); Retainer is `1m` / `2m` / `3m` / `6m` / `1y`. Status filters are numeric: recurring `5/10/20/30/50/60/70` (pending/created/started/finished/canceled/suspended/expired), retainer `1/2/3/10/20` (created/started/finished/paused/deleted).
+>
+> The **retainer** create/update body is nested (from the web app's `buildData()`): `{ startDate, endDate, interval, doc: { …document fields, type }, data: { paymentTerms, description } }`, built via dotted properties (`doc.*`, `data.*`). `paymentTerms` is a number (Immediate `-1`, or Net `10/15/30/45/60/75/90/120`); `data.description` is a token (`my` = month-year, `pmy` = previous-month-year) or free text.
 
 ### Trigger: `Morning Trigger`
 - Receives the form-urlencoded webhook Morning POSTs to `notifyUrl` after a payment
@@ -127,6 +135,8 @@ n8n-nodes-morning/
 │   │       ├── ItemDescription.ts
 │   │       ├── ExpenseDescription.ts
 │   │       ├── PaymentDescription.ts
+│   │       ├── RecurringPaymentDescription.ts
+│   │       ├── RetainerDescription.ts
 │   │       ├── AccountingDescription.ts
 │   │       └── index.ts
 │   └── MorningTrigger/

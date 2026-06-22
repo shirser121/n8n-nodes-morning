@@ -15,6 +15,10 @@ import {
 	itemOperations,
 	paymentFields,
 	paymentOperations,
+	recurringFields,
+	recurringOperations,
+	retainerFields,
+	retainerOperations,
 	supplierFields,
 	supplierOperations,
 } from './descriptions';
@@ -31,7 +35,7 @@ export class Morning implements INodeType {
 		usableAsTool: {
 			replacements: {
 				description:
-					'Israeli accounting & invoicing via Morning (Green Invoice). Create and search clients, suppliers and catalog items; issue documents (tax invoices, receipts, invoice-receipts); record expenses; create payment links and charge saved cards. Use for any Morning bookkeeping or invoicing action.',
+					'Israeli accounting & invoicing via Morning (Green Invoice). Create and search clients, suppliers and catalog items; issue documents (tax invoices, receipts, invoice-receipts); record expenses; create payment links and charge saved cards; manage recurring payments (הוראת קבע) and retainers (ריטיינר). Use for any Morning bookkeeping or invoicing action.',
 			},
 		},
 		defaults: {
@@ -66,6 +70,8 @@ export class Morning implements INodeType {
 					{ name: 'Item (Catalog)', value: 'item' },
 					{ name: 'Expense', value: 'expense' },
 					{ name: 'Payment', value: 'payment' },
+					{ name: 'Recurring Payment (הוראת קבע)', value: 'recurring' },
+					{ name: 'Retainer (ריטיינר)', value: 'retainer' },
 					{ name: 'Accounting', value: 'accounting' },
 					{ name: 'Business', value: 'business' },
 				],
@@ -83,6 +89,10 @@ export class Morning implements INodeType {
 			...expenseFields,
 			...paymentOperations,
 			...paymentFields,
+			...recurringOperations,
+			...recurringFields,
+			...retainerOperations,
+			...retainerFields,
 			...accountingOperations,
 			...accountingFields,
 			...businessOperations,
