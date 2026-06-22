@@ -97,6 +97,41 @@ export const retainerOperations: INodeProperties[] = [
 					},
 				},
 			},
+			{
+				name: 'Count',
+				value: 'count',
+				action: 'Count retainers',
+				routing: {
+					request: {
+						method: 'GET',
+						url: '/retainers/count',
+					},
+				},
+			},
+			{
+				name: 'Get Jobs',
+				value: 'getJobs',
+				action: 'Get the issued jobs of a retainer',
+				description: 'List the individual runs (jobs) of a retainer',
+				routing: {
+					request: {
+						method: 'GET',
+						url: '=/retainers/{{ $parameter["retainerId"] }}/jobs',
+					},
+				},
+			},
+			{
+				name: 'Process Job',
+				value: 'processJob',
+				action: 'Process a retainer job for a date',
+				description: 'Manually run a retainer job for a specific date',
+				routing: {
+					request: {
+						method: 'POST',
+						url: '=/retainers/{{ $parameter["retainerId"] }}/jobs',
+					},
+				},
+			},
 		],
 		default: 'create',
 	},
@@ -114,7 +149,44 @@ export const retainerFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['retainer'],
-				operation: ['get', 'update', 'delete'],
+				operation: ['get', 'update', 'delete', 'getJobs', 'processJob'],
+			},
+		},
+	},
+	{
+		displayName: 'Jobs Page',
+		name: 'jobsPage',
+		type: 'number',
+		default: 1,
+		description: 'Page number of jobs to return (1-based)',
+		displayOptions: {
+			show: {
+				resource: ['retainer'],
+				operation: ['getJobs'],
+			},
+		},
+		routing: {
+			send: { type: 'query', property: 'page' },
+		},
+	},
+	{
+		displayName: 'Job Date',
+		name: 'jobDate',
+		type: 'dateTime',
+		default: '',
+		required: true,
+		description: 'The date to run the retainer job for (YYYY-MM-DD); sent as {date}',
+		displayOptions: {
+			show: {
+				resource: ['retainer'],
+				operation: ['processJob'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'date',
+				value: '={{ $value ? $value.split("T")[0] : undefined }}',
 			},
 		},
 	},
