@@ -171,6 +171,7 @@ export const documentFields: INodeProperties[] = [
 		options: documentTypeOptions,
 		default: 320,
 		required: true,
+		description: 'The document type to look up info (next number, VAT types, payment plugins) for',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -187,6 +188,7 @@ export const documentFields: INodeProperties[] = [
 		options: documentTypeOptions,
 		default: 305,
 		required: true,
+		description: 'The kind of document to issue (e.g. 305 = tax invoice, 320 = invoice + receipt, 400 = receipt)',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -203,6 +205,7 @@ export const documentFields: INodeProperties[] = [
 		type: 'string',
 		default: '',
 		required: true,
+		description: 'Title/description shown on the document',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -222,6 +225,7 @@ export const documentFields: INodeProperties[] = [
 			{ name: 'English', value: 'en' },
 		],
 		default: 'he',
+		description: 'Language the document is rendered in',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -237,6 +241,7 @@ export const documentFields: INodeProperties[] = [
 		name: 'currency',
 		type: 'string',
 		default: 'ILS',
+		description: 'ISO 4217 currency code for the document totals (e.g. "ILS", "USD", "EUR")',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -257,6 +262,7 @@ export const documentFields: INodeProperties[] = [
 			{ name: '2 — VAT exempt', value: 2 },
 		],
 		default: 1,
+		description: 'How line prices relate to VAT: 0 = before VAT, 1 = VAT included, 2 = exempt',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -388,6 +394,7 @@ export const documentFields: INodeProperties[] = [
 		name: 'emailSubject',
 		type: 'string',
 		default: '',
+		description: 'Subject line of the email sending the document',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -404,6 +411,7 @@ export const documentFields: INodeProperties[] = [
 		type: 'string',
 		typeOptions: { rows: 4 },
 		default: '',
+		description: 'Body text of the email sending the document',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -419,6 +427,7 @@ export const documentFields: INodeProperties[] = [
 		name: 'original',
 		type: 'boolean',
 		default: false,
+		description: 'Whether to send the original document (true) rather than a copy (false)',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -436,6 +445,7 @@ export const documentFields: INodeProperties[] = [
 		name: 'fromDate',
 		type: 'dateTime',
 		default: '',
+		description: 'Only return documents dated on or after this ISO date (YYYY-MM-DD)',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -455,6 +465,7 @@ export const documentFields: INodeProperties[] = [
 		name: 'toDate',
 		type: 'dateTime',
 		default: '',
+		description: 'Only return documents dated on or before this ISO date (YYYY-MM-DD)',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -475,6 +486,7 @@ export const documentFields: INodeProperties[] = [
 		type: 'multiOptions',
 		options: documentTypeOptions,
 		default: [],
+		description: 'Filter results to these document type codes; leave empty for all types',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -494,6 +506,7 @@ export const documentFields: INodeProperties[] = [
 		name: 'page',
 		type: 'number',
 		default: 1,
+		description: 'Page number of search results to return (1-based)',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -510,6 +523,7 @@ export const documentFields: INodeProperties[] = [
 		type: 'number',
 		default: 50,
 		typeOptions: { minValue: 1, maxValue: 100 },
+		description: 'Number of results per page (1-100)',
 		displayOptions: {
 			show: {
 				resource: ['document'],

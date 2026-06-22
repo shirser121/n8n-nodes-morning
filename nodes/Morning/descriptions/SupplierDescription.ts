@@ -61,16 +61,18 @@ export const supplierFields: INodeProperties[] = [
 		type: 'string',
 		required: true,
 		default: '',
+		description: 'The UUID of the supplier to act on',
 		displayOptions: {
 			show: { resource: ['supplier'], operation: ['get', 'update', 'delete'] },
 		},
 	},
 	{
 		displayName: 'Name',
-		name: 'name',
+		name: 'supplierName',
 		type: 'string',
 		default: '',
 		required: true,
+		description: "The supplier's display name (person or company)",
 		displayOptions: {
 			show: { resource: ['supplier'], operation: ['create', 'update'] },
 		},
@@ -117,6 +119,7 @@ export const supplierFields: INodeProperties[] = [
 		name: 'phone',
 		type: 'string',
 		default: '',
+		description: 'Contact phone number, e.g. "03-1234567" or "+972-50-1234567"',
 		displayOptions: { show: { resource: ['supplier'], operation: ['create', 'update'] } },
 		routing: {
 			send: { type: 'body', property: 'phone', value: '={{ $value || undefined }}' },
@@ -127,6 +130,7 @@ export const supplierFields: INodeProperties[] = [
 		name: 'address',
 		type: 'string',
 		default: '',
+		description: 'Street address (street and house number)',
 		displayOptions: { show: { resource: ['supplier'], operation: ['create', 'update'] } },
 		routing: {
 			send: { type: 'body', property: 'address', value: '={{ $value || undefined }}' },
@@ -137,6 +141,7 @@ export const supplierFields: INodeProperties[] = [
 		name: 'city',
 		type: 'string',
 		default: '',
+		description: 'City name',
 		displayOptions: { show: { resource: ['supplier'], operation: ['create', 'update'] } },
 		routing: {
 			send: { type: 'body', property: 'city', value: '={{ $value || undefined }}' },
@@ -147,6 +152,7 @@ export const supplierFields: INodeProperties[] = [
 		name: 'country',
 		type: 'string',
 		default: 'IL',
+		description: 'ISO 3166-1 alpha-2 country code (e.g. "IL" for Israel, "US")',
 		displayOptions: { show: { resource: ['supplier'], operation: ['create', 'update'] } },
 		routing: { send: { type: 'body', property: 'country' } },
 	},
@@ -164,6 +170,7 @@ export const supplierFields: INodeProperties[] = [
 		name: 'searchTerm',
 		type: 'string',
 		default: '',
+		description: 'Free-text term to search suppliers by name',
 		displayOptions: { show: { resource: ['supplier'], operation: ['search'] } },
 		routing: {
 			send: { type: 'body', property: 'name', value: '={{ $value || undefined }}' },
@@ -174,6 +181,7 @@ export const supplierFields: INodeProperties[] = [
 		name: 'page',
 		type: 'number',
 		default: 1,
+		description: 'Page number of search results to return (1-based)',
 		displayOptions: { show: { resource: ['supplier'], operation: ['search'] } },
 		routing: { send: { type: 'body', property: 'page' } },
 	},
@@ -183,6 +191,7 @@ export const supplierFields: INodeProperties[] = [
 		type: 'number',
 		default: 50,
 		typeOptions: { minValue: 1, maxValue: 100 },
+		description: 'Number of results per page (1-100)',
 		displayOptions: { show: { resource: ['supplier'], operation: ['search'] } },
 		routing: { send: { type: 'body', property: 'pageSize' } },
 	},

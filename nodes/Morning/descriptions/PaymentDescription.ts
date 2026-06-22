@@ -91,6 +91,7 @@ export const paymentFields: INodeProperties[] = [
 		],
 		default: 320,
 		required: true,
+		description: 'Document type automatically issued once the payment succeeds',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -168,6 +169,7 @@ export const paymentFields: INodeProperties[] = [
 		name: 'currency',
 		type: 'string',
 		default: 'ILS',
+		description: 'ISO 4217 currency code to charge in (e.g. "ILS", "USD", "EUR")',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -187,6 +189,7 @@ export const paymentFields: INodeProperties[] = [
 			{ name: 'English', value: 'en' },
 		],
 		default: 'he',
+		description: 'Language of the hosted checkout page and issued document',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -207,6 +210,7 @@ export const paymentFields: INodeProperties[] = [
 			{ name: '2 — VAT exempt', value: 2 },
 		],
 		default: 1,
+		description: 'How income line prices relate to VAT: 0 = before VAT, 1 = VAT included, 2 = exempt',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -247,6 +251,7 @@ export const paymentFields: INodeProperties[] = [
 		],
 		default: 100,
 		required: true,
+		description: 'Which payment method to offer on the hosted checkout page',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -278,6 +283,7 @@ export const paymentFields: INodeProperties[] = [
 		name: 'client',
 		type: 'json',
 		default: '{\n  "name": "",\n  "emails": [""]\n}',
+		description: 'Client object as JSON. Pass {"id":"<uuid>"} for an existing client, or {"name":...,"emails":[...]} to create one.',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -294,6 +300,7 @@ export const paymentFields: INodeProperties[] = [
 		type: 'json',
 		default:
 			'[\n  {\n    "description": "",\n    "quantity": 1,\n    "price": 0,\n    "currency": "ILS",\n    "vatType": 1\n  }\n]',
+		description: 'Line items as a JSON array; each has description, quantity, price, currency and vatType',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -329,6 +336,7 @@ export const paymentFields: INodeProperties[] = [
 		name: 'failureUrl',
 		type: 'string',
 		default: '',
+		description: 'Customer is redirected here after a failed or cancelled payment',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -393,6 +401,7 @@ export const paymentFields: INodeProperties[] = [
 		type: 'string',
 		required: true,
 		default: '',
+		description: 'The UUID of the payment link to retrieve',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -405,6 +414,7 @@ export const paymentFields: INodeProperties[] = [
 		name: 'page',
 		type: 'number',
 		default: 1,
+		description: 'Page number of search results to return (1-based)',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -421,6 +431,7 @@ export const paymentFields: INodeProperties[] = [
 		type: 'number',
 		default: 50,
 		typeOptions: { minValue: 1, maxValue: 100 },
+		description: 'Number of results per page (1-100)',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -439,6 +450,7 @@ export const paymentFields: INodeProperties[] = [
 		type: 'string',
 		required: true,
 		default: '',
+		description: 'The UUID of the saved credit-card token to charge',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -452,6 +464,7 @@ export const paymentFields: INodeProperties[] = [
 		type: 'number',
 		default: 0,
 		required: true,
+		description: 'Amount to charge the saved token, in the document currency',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -467,6 +480,7 @@ export const paymentFields: INodeProperties[] = [
 		name: 'chargeDescription',
 		type: 'string',
 		default: '',
+		description: 'Description for the token charge (e.g. order number)',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
