@@ -81,6 +81,7 @@ export const clientFields: INodeProperties[] = [
 		type: 'string',
 		required: true,
 		default: '',
+		description: 'The UUID of the client to act on',
 		displayOptions: {
 			show: {
 				resource: ['client'],
@@ -90,10 +91,11 @@ export const clientFields: INodeProperties[] = [
 	},
 	{
 		displayName: 'Name',
-		name: 'name',
+		name: 'clientName',
 		type: 'string',
 		default: '',
 		required: true,
+		description: "The client's display name (person or company)",
 		displayOptions: {
 			show: {
 				resource: ['client'],
@@ -153,6 +155,7 @@ export const clientFields: INodeProperties[] = [
 		name: 'phone',
 		type: 'string',
 		default: '',
+		description: 'Contact phone number, e.g. "03-1234567" or "+972-50-1234567"',
 		displayOptions: {
 			show: {
 				resource: ['client'],
@@ -172,6 +175,7 @@ export const clientFields: INodeProperties[] = [
 		name: 'address',
 		type: 'string',
 		default: '',
+		description: 'Street address (street and house number)',
 		displayOptions: {
 			show: {
 				resource: ['client'],
@@ -191,6 +195,7 @@ export const clientFields: INodeProperties[] = [
 		name: 'city',
 		type: 'string',
 		default: '',
+		description: 'City name',
 		displayOptions: {
 			show: {
 				resource: ['client'],
@@ -210,6 +215,7 @@ export const clientFields: INodeProperties[] = [
 		name: 'country',
 		type: 'string',
 		default: 'IL',
+		description: 'ISO 3166-1 alpha-2 country code (e.g. "IL" for Israel, "US")',
 		displayOptions: {
 			show: {
 				resource: ['client'],
@@ -225,6 +231,7 @@ export const clientFields: INodeProperties[] = [
 		name: 'remarks',
 		type: 'string',
 		default: '',
+		description: 'Free-text internal notes about the client',
 		displayOptions: {
 			show: {
 				resource: ['client'],
@@ -266,6 +273,7 @@ export const clientFields: INodeProperties[] = [
 		name: 'page',
 		type: 'number',
 		default: 1,
+		description: 'Page number of search results to return (1-based)',
 		displayOptions: {
 			show: {
 				resource: ['client'],
@@ -282,6 +290,7 @@ export const clientFields: INodeProperties[] = [
 		type: 'number',
 		default: 50,
 		typeOptions: { minValue: 1, maxValue: 100 },
+		description: 'Number of results per page (1-100)',
 		displayOptions: {
 			show: {
 				resource: ['client'],

@@ -107,6 +107,7 @@ export const businessFields: INodeProperties[] = [
 			{ name: 'English', value: 'en' },
 		],
 		default: 'en',
+		description: 'Language for the returned business-type names',
 		displayOptions: {
 			show: {
 				resource: ['business'],

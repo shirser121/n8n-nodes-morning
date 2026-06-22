@@ -91,6 +91,7 @@ export const expenseFields: INodeProperties[] = [
 		type: 'string',
 		required: true,
 		default: '',
+		description: 'The UUID of the expense to act on',
 		displayOptions: {
 			show: { resource: ['expense'], operation: ['get', 'close', 'open', 'delete'] },
 		},
@@ -157,6 +158,7 @@ export const expenseFields: INodeProperties[] = [
 		type: 'dateTime',
 		default: '',
 		required: true,
+		description: 'Date on the supplier document, as ISO date (YYYY-MM-DD)',
 		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
 		routing: {
 			send: {
@@ -191,6 +193,7 @@ export const expenseFields: INodeProperties[] = [
 			{ name: 'English', value: 'en' },
 		],
 		default: 'he',
+		description: 'Language of the expense record',
 		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
 		routing: { send: { type: 'body', property: 'lang' } },
 	},
@@ -199,6 +202,7 @@ export const expenseFields: INodeProperties[] = [
 		name: 'currency',
 		type: 'string',
 		default: 'ILS',
+		description: 'ISO 4217 currency code of the amounts (e.g. "ILS", "USD")',
 		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
 		routing: { send: { type: 'body', property: 'currency' } },
 	},
@@ -208,6 +212,7 @@ export const expenseFields: INodeProperties[] = [
 		type: 'number',
 		default: 0,
 		required: true,
+		description: 'Total amount including VAT (should equal Amount Excluding VAT + VAT Amount)',
 		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
 		routing: { send: { type: 'body', property: 'amount' } },
 	},
@@ -217,6 +222,7 @@ export const expenseFields: INodeProperties[] = [
 		type: 'number',
 		default: 0,
 		required: true,
+		description: 'The VAT (tax) portion of the amount, in the chosen currency',
 		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
 		routing: { send: { type: 'body', property: 'vat' } },
 	},
@@ -226,6 +232,7 @@ export const expenseFields: INodeProperties[] = [
 		type: 'number',
 		default: 0,
 		required: true,
+		description: 'The net amount before VAT, in the chosen currency',
 		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
 		routing: { send: { type: 'body', property: 'amountExcludeVat' } },
 	},
@@ -235,6 +242,7 @@ export const expenseFields: INodeProperties[] = [
 		type: 'string',
 		default: '',
 		required: true,
+		description: 'Free-text description of what the expense was for',
 		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
 		routing: { send: { type: 'body', property: 'description' } },
 	},
@@ -244,6 +252,7 @@ export const expenseFields: INodeProperties[] = [
 		type: 'dateTime',
 		default: '',
 		required: true,
+		description: 'Date the expense was paid, as ISO date (YYYY-MM-DD)',
 		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
 		routing: {
 			send: {
@@ -270,6 +279,7 @@ export const expenseFields: INodeProperties[] = [
 		],
 		default: 4,
 		required: true,
+		description: 'How the expense was paid; use -1 if it is still unpaid',
 		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
 		routing: { send: { type: 'body', property: 'paymentType' } },
 	},
@@ -280,6 +290,7 @@ export const expenseFields: INodeProperties[] = [
 		name: 'fromDate',
 		type: 'dateTime',
 		default: '',
+		description: 'Only return expenses dated on or after this ISO date (YYYY-MM-DD)',
 		displayOptions: { show: { resource: ['expense'], operation: ['search', 'searchDrafts'] } },
 		routing: {
 			send: {
@@ -294,6 +305,7 @@ export const expenseFields: INodeProperties[] = [
 		name: 'toDate',
 		type: 'dateTime',
 		default: '',
+		description: 'Only return expenses dated on or before this ISO date (YYYY-MM-DD)',
 		displayOptions: { show: { resource: ['expense'], operation: ['search', 'searchDrafts'] } },
 		routing: {
 			send: {
@@ -308,6 +320,7 @@ export const expenseFields: INodeProperties[] = [
 		name: 'page',
 		type: 'number',
 		default: 1,
+		description: 'Page number of search results to return (1-based)',
 		displayOptions: { show: { resource: ['expense'], operation: ['search', 'searchDrafts'] } },
 		routing: { send: { type: 'body', property: 'page' } },
 	},
@@ -317,6 +330,7 @@ export const expenseFields: INodeProperties[] = [
 		type: 'number',
 		default: 50,
 		typeOptions: { minValue: 1, maxValue: 100 },
+		description: 'Number of results per page (1-100)',
 		displayOptions: { show: { resource: ['expense'], operation: ['search', 'searchDrafts'] } },
 		routing: { send: { type: 'body', property: 'pageSize' } },
 	},
