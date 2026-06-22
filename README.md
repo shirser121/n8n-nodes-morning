@@ -33,9 +33,9 @@ Built against the live sandbox API (verified 2026-05-31).
 
 **56 operations across 10 resources.**
 
-> **Recurring Payment** and **Retainer** wrap Morning's *recurring-income* features (הכנסות קבועות). A **Recurring Payment** (`/payments/recurrings`) auto-charges a saved credit-card token on a schedule; a **Retainer** (`/retainers`) auto-issues a recurring document/payment-request to a client. These two endpoint families are **not in Morning's official (Apiary) API reference** — they were reverse-engineered from Morning's own web-app API client.
+> **Recurring Payment** and **Retainer** wrap Morning's *recurring-income* features (הכנסות קבועות). A **Recurring Payment** (`/payments/recurrings`) auto-charges a saved credit-card token on a schedule; a **Retainer** (`/retainers`) auto-issues a recurring document/payment-request to a client. These two endpoint families are **not in Morning's official (Apiary) API reference** — paths, verbs and request bodies were taken verbatim from Morning's own web-app client.
 >
-> Paths, verbs and the recurring-payment create body are taken verbatim from Morning's client. The **retainer create/update body** mirrors a document payload plus recurrence fields (`interval`, `startDate`, `endDate`, `day`) — the exact field set is built in a separate web-app view chunk, so verify it against a live `POST /v1/retainers` (e.g. via DevTools) before production use.
+> The **retainer** create/update body is nested (from the web app's `buildData()`): `{ startDate, endDate, interval, doc: { …document fields, type }, data: { paymentTerms, description } }`. The node builds this via dotted properties (`doc.*`, `data.*`). `paymentTerms` is a number (Immediate `-1`, or Net `10/15/30/45/60/75/90/120`); `data.description` is a token (`my` = month-year, `pmy` = previous-month-year) or free text; `interval` is `1m/2m/3m/6m/1y`.
 
 ### Trigger: `Morning Trigger`
 - Receives the form-urlencoded webhook Morning POSTs to `notifyUrl` after a payment
