@@ -1,4 +1,4 @@
-import { INodeType, INodeTypeDescription, NodeConnectionTypes } from 'n8n-workflow';
+import type { INodeType, INodeTypeDescription } from 'n8n-workflow';
 
 import {
 	accountingFields,
@@ -31,8 +31,8 @@ export class Morning implements INodeType {
 		defaults: {
 			name: 'Morning',
 		},
-		inputs: [NodeConnectionTypes.Main],
-		outputs: [NodeConnectionTypes.Main],
+		inputs: ['main'] as INodeTypeDescription['inputs'],
+		outputs: ['main'] as INodeTypeDescription['outputs'],
 		credentials: [
 			{
 				name: 'morningApi',

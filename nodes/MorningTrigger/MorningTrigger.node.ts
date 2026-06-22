@@ -1,10 +1,9 @@
-import {
+import type {
 	IDataObject,
 	INodeType,
 	INodeTypeDescription,
 	IWebhookFunctions,
 	IWebhookResponseData,
-	NodeConnectionTypes,
 } from 'n8n-workflow';
 
 interface MorningWebhookBody {
@@ -33,7 +32,7 @@ export class MorningTrigger implements INodeType {
 			name: 'Morning Trigger',
 		},
 		inputs: [],
-		outputs: [NodeConnectionTypes.Main],
+		outputs: ['main'] as INodeTypeDescription['outputs'],
 		webhooks: [
 			{
 				name: 'default',
