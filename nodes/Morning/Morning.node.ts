@@ -28,6 +28,7 @@ export class Morning implements INodeType {
 		version: 1,
 		subtitle: '={{ $parameter["operation"] + ": " + $parameter["resource"] }}',
 		description: 'Morning (Green Invoice / חשבונית ירוקה) — Israeli accounting and invoicing',
+		usableAsTool: true,
 		defaults: {
 			name: 'Morning',
 		},
