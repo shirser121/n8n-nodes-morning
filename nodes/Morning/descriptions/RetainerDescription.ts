@@ -44,6 +44,14 @@ const paymentTermsOptions = [
 	{ name: 'Net 120', value: 120 },
 ];
 
+const statusOptions = [
+	{ name: 'Created (נוצר) — 1', value: 1 },
+	{ name: 'Started / Active (פעיל) — 2', value: 2 },
+	{ name: 'Finished (הסתיים) — 3', value: 3 },
+	{ name: 'Paused (מוקפא) — 10', value: 10 },
+	{ name: 'Deleted (נמחק) — 20', value: 20 },
+];
+
 export const retainerOperations: INodeProperties[] = [
 	{
 		displayName: 'Operation',
@@ -637,6 +645,27 @@ export const retainerFields: INodeProperties[] = [
 				type: 'body',
 				property: 'multiFieldsText',
 				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Status',
+		name: 'status',
+		type: 'multiOptions',
+		options: statusOptions,
+		default: [],
+		description: 'Filter by status; leave empty for all (sent as an array of numeric codes)',
+		displayOptions: {
+			show: {
+				resource: ['retainer'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'status',
+				value: '={{ $value && $value.length > 0 ? $value : undefined }}',
 			},
 		},
 	},

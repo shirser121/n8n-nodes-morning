@@ -7,9 +7,11 @@ import { INodeProperties } from 'n8n-workflow';
  * schedule and auto-issues a document each cycle. It is the "direct debit" side of
  * Morning's "הכנסות קבועות" (recurring income); the sibling is the Retainer resource.
  *
- * NOTE: this endpoint family is NOT in Morning's official (Apiary) API reference. The
- * paths and the request body below were reverse-engineered from Morning's own web-app
- * API client. Treat as undocumented — verify against your account before production use.
+ * NOTE: this endpoint family is NOT in Morning's official (Apiary) API reference. The paths,
+ * request body and enums below were taken from Morning's own web-app client and confirmed
+ * against a live GET /payments/recurrings/{id} response: interval is "1"|"2"|"3"|"12"
+ * (months, NOT "1m"); status is numeric (5 pending, 10 created, 20 started, 30 finished,
+ * 50 canceled, 60 suspended, 70 expired). The create body nests document settings under data.*.
  */
 const documentTypeOptions = [
 	{ name: 'Tax Invoice + Receipt (חשבונית מס/קבלה) — 320', value: 320 },
@@ -18,11 +20,20 @@ const documentTypeOptions = [
 ];
 
 const intervalOptions = [
-	{ name: 'Monthly (כל חודש) — 1m', value: '1m' },
-	{ name: 'Every 2 Months (כל חודשיים) — 2m', value: '2m' },
-	{ name: 'Quarterly (כל 3 חודשים) — 3m', value: '3m' },
-	{ name: 'Semi-Annually (כל 6 חודשים) — 6m', value: '6m' },
-	{ name: 'Yearly (כל שנה) — 1y', value: '1y' },
+	{ name: 'Monthly (כל חודש) — 1', value: '1' },
+	{ name: 'Every 2 Months (כל חודשיים) — 2', value: '2' },
+	{ name: 'Quarterly (כל 3 חודשים) — 3', value: '3' },
+	{ name: 'Yearly (כל שנה) — 12', value: '12' },
+];
+
+const statusOptions = [
+	{ name: 'Pending (5)', value: 5 },
+	{ name: 'Created (10)', value: 10 },
+	{ name: 'Started (20)', value: 20 },
+	{ name: 'Finished (30)', value: 30 },
+	{ name: 'Canceled (50)', value: 50 },
+	{ name: 'Suspended (60)', value: 60 },
+	{ name: 'Expired (70)', value: 70 },
 ];
 
 export const recurringOperations: INodeProperties[] = [
@@ -164,6 +175,18 @@ export const recurringOperations: INodeProperties[] = [
 						method: 'POST',
 						url: '/payments/recurrings/jobs/failed',
 						body: {},
+					},
+				},
+			},
+			{
+				name: 'Export',
+				value: 'export',
+				action: 'Export recurring payments as CSV',
+				description: 'Download recurring payments as CSV (returns CSV text)',
+				routing: {
+					request: {
+						method: 'GET',
+						url: '/payments/recurrings/export',
 					},
 				},
 			},
@@ -337,7 +360,7 @@ export const recurringFields: INodeProperties[] = [
 		name: 'interval',
 		type: 'options',
 		options: intervalOptions,
-		default: '1m',
+		default: '1',
 		description: 'How often to charge',
 		displayOptions: {
 			show: {
@@ -530,6 +553,27 @@ export const recurringFields: INodeProperties[] = [
 		},
 	},
 	{
+		displayName: 'Status',
+		name: 'status',
+		type: 'multiOptions',
+		options: statusOptions,
+		default: [],
+		description: 'Filter by status; leave empty for all (sent as an array of numeric codes)',
+		displayOptions: {
+			show: {
+				resource: ['recurring'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'status',
+				value: '={{ $value && $value.length > 0 ? $value : undefined }}',
+			},
+		},
+	},
+	{
 		displayName: 'Page',
 		name: 'page',
 		type: 'number',
@@ -560,6 +604,49 @@ export const recurringFields: INodeProperties[] = [
 		},
 		routing: {
 			send: { type: 'body', property: 'pageSize' },
+		},
+	},
+
+	// ─── Export fields (query params) ─────────────────────────────────────────────
+	{
+		displayName: 'Search Term',
+		name: 'exportSearchTerm',
+		type: 'string',
+		default: '',
+		description: 'Optional free-text filter for the export (sent as query multiFieldsText)',
+		displayOptions: {
+			show: {
+				resource: ['recurring'],
+				operation: ['export'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'query',
+				property: 'multiFieldsText',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Business ID',
+		name: 'exportBusinessId',
+		type: 'string',
+		default: '',
+		description:
+			'Business UUID to scope the export to (the web app appends this). Discover via Business → Get Me. Leave empty to let the token decide.',
+		displayOptions: {
+			show: {
+				resource: ['recurring'],
+				operation: ['export'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'query',
+				property: 'businessId',
+				value: '={{ $value || undefined }}',
+			},
 		},
 	},
 ];
