@@ -142,6 +142,31 @@ export const recurringOperations: INodeProperties[] = [
 					},
 				},
 			},
+			{
+				name: 'Distribute',
+				value: 'distribute',
+				action: 'Distribute a recurring payment',
+				description: 'Run the distribute action for a recurring payment',
+				routing: {
+					request: {
+						method: 'POST',
+						url: '=/payments/recurrings/{{ $parameter["recurringId"] }}/distribute',
+					},
+				},
+			},
+			{
+				name: 'Search Failed Jobs',
+				value: 'searchFailedJobs',
+				action: 'Search all failed charge jobs',
+				description: 'List failed charge jobs across all recurring payments',
+				routing: {
+					request: {
+						method: 'POST',
+						url: '/payments/recurrings/jobs/failed',
+						body: {},
+					},
+				},
+			},
 		],
 		default: 'create',
 	},
@@ -159,7 +184,7 @@ export const recurringFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
-				operation: ['get', 'update', 'delete', 'getJobs', 'recharge', 'unsuspend'],
+				operation: ['get', 'update', 'delete', 'getJobs', 'recharge', 'unsuspend', 'distribute'],
 			},
 		},
 	},
@@ -444,17 +469,38 @@ export const recurringFields: INodeProperties[] = [
 		},
 	},
 
-	// ─── Recharge body (optional) ─────────────────────────────────────────────────
+	// ─── Recharge / Distribute body ───────────────────────────────────────────────
 	{
-		displayName: 'Job Payload (JSON)',
-		name: 'jobPayload',
-		type: 'json',
-		default: '{}',
-		description: 'Optional body for the manual charge job (leave as {} for the default behavior)',
+		displayName: 'Charge Date',
+		name: 'chargeDate',
+		type: 'dateTime',
+		default: '',
+		required: true,
+		description: 'Date to run the manual charge job for (YYYY-MM-DD); sent as {date}',
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
 				operation: ['recharge'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'date',
+				value: '={{ $value ? $value.split("T")[0] : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Distribute Body (JSON)',
+		name: 'distributeBody',
+		type: 'json',
+		default: '{}',
+		description: 'Body for the distribute action. Pass {} for the default behavior.',
+		displayOptions: {
+			show: {
+				resource: ['recurring'],
+				operation: ['distribute'],
 			},
 		},
 		routing: {

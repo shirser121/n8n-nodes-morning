@@ -417,6 +417,171 @@ export const retainerFields: INodeProperties[] = [
 			},
 		},
 	},
+	{
+		displayName: 'Document Title',
+		name: 'docDescription',
+		type: 'string',
+		default: '',
+		description: 'Optional title on the issued document itself (sent as doc.description)',
+		displayOptions: {
+			show: {
+				resource: ['retainer'],
+				operation: ['create', 'update'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'doc.description',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Discount (JSON)',
+		name: 'discount',
+		type: 'json',
+		default: '{\n  "type": "percentage",\n  "amount": 0\n}',
+		description: 'Optional discount object (sent as doc.discount), e.g. {"type":"percentage","amount":10}',
+		displayOptions: {
+			show: {
+				resource: ['retainer'],
+				operation: ['create', 'update'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'doc.discount',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Signed',
+		name: 'signed',
+		type: 'boolean',
+		default: true,
+		description: 'Whether the issued document is digitally signed (sent as doc.signed)',
+		displayOptions: {
+			show: {
+				resource: ['retainer'],
+				operation: ['create', 'update'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'doc.signed' },
+		},
+	},
+	{
+		displayName: 'Round Amounts',
+		name: 'rounding',
+		type: 'boolean',
+		default: false,
+		description: 'Whether to round the document totals (sent as doc.rounding)',
+		displayOptions: {
+			show: {
+				resource: ['retainer'],
+				operation: ['create', 'update'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'doc.rounding' },
+		},
+	},
+	{
+		displayName: 'Attachment',
+		name: 'attachment',
+		type: 'boolean',
+		default: false,
+		description: 'Whether the issued document includes an attachment (sent as doc.attachment)',
+		displayOptions: {
+			show: {
+				resource: ['retainer'],
+				operation: ['create', 'update'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'doc.attachment' },
+		},
+	},
+	{
+		displayName: 'Skip Date Validation',
+		name: 'skipDateValidation',
+		type: 'boolean',
+		default: false,
+		description: 'Whether to skip document date validation (sent as doc.skipDateValidation)',
+		displayOptions: {
+			show: {
+				resource: ['retainer'],
+				operation: ['create', 'update'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'doc.skipDateValidation' },
+		},
+	},
+	{
+		displayName: 'Footer',
+		name: 'footer',
+		type: 'string',
+		default: '',
+		description: 'Optional document footer text (sent as doc.footer)',
+		displayOptions: {
+			show: {
+				resource: ['retainer'],
+				operation: ['create', 'update'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'doc.footer',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Email Content',
+		name: 'emailContent',
+		type: 'string',
+		typeOptions: { rows: 3 },
+		default: '',
+		description: 'Optional email body sent with the document each cycle (sent as doc.emailContent)',
+		displayOptions: {
+			show: {
+				resource: ['retainer'],
+				operation: ['create', 'update'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'doc.emailContent',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Payment Request Data (JSON)',
+		name: 'paymentRequestData',
+		type: 'json',
+		default: '{}',
+		description: 'Optional payment-request configuration (sent as doc.paymentRequestData)',
+		displayOptions: {
+			show: {
+				resource: ['retainer'],
+				operation: ['create', 'update'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'doc.paymentRequestData',
+				value: '={{ $value && Object.keys($value).length > 0 ? $value : undefined }}',
+			},
+		},
+	},
 
 	// ─── Create / Update body: recurrence data (data.*) ──────────────────────────
 	{
