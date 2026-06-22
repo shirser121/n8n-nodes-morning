@@ -1,0 +1,66 @@
+{
+  "name": "n8n-nodes-morning",
+  "version": "0.1.0",
+  "description": "n8n community node for Morning (Green Invoice) — Israeli accounting and invoicing API",
+  "keywords": [
+    "n8n-community-node-package",
+    "n8n",
+    "morning",
+    "greeninvoice",
+    "green-invoice",
+    "israel",
+    "invoicing",
+    "accounting",
+    "חשבונית-ירוקה"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/shirser121/n8n-nodes-morning#readme",
+  "author": {
+    "name": "Shir"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/shirser121/n8n-nodes-morning.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shirser121/n8n-nodes-morning/issues"
+  },
+  "engines": {
+    "node": ">=20.15"
+  },
+  "main": "index.js",
+  "scripts": {
+    "build": "tsc && npm run copy:icons",
+    "copy:icons": "mkdir -p dist/nodes/Morning dist/nodes/MorningTrigger && cp nodes/Morning/morning.svg dist/nodes/Morning/ && cp nodes/MorningTrigger/morning.svg dist/nodes/MorningTrigger/",
+    "dev": "tsc --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint nodes credentials",
+    "lintfix": "eslint nodes credentials --fix",
+    "prepublishOnly": "npm run build"
+  },
+  "files": [
+    "dist",
+    "index.js"
+  ],
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [
+      "dist/credentials/MorningApi.credentials.js"
+    ],
+    "nodes": [
+      "dist/nodes/Morning/Morning.node.js",
+      "dist/nodes/MorningTrigger/MorningTrigger.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "eslint": "^8.57.0",
+    "n8n-workflow": "^1.82.0",
+    "typescript": "^5.5.0"
+  },
+  "peerDependencies": {
+    "n8n-workflow": "*"
+  }
+}

@@ -1,0 +1,323 @@
+import { INodeProperties } from 'n8n-workflow';
+
+const expenseDocumentTypeOptions = [
+	{ name: 'Tax Invoice + Receipt (320)', value: 320 },
+	{ name: 'Tax Invoice (305)', value: 305 },
+	{ name: 'Receipt (400)', value: 400 },
+	{ name: 'Credit Note (330)', value: 330 },
+	{ name: 'Order (100)', value: 100 },
+	{ name: 'Delivery Note (200)', value: 200 },
+];
+
+export const expenseOperations: INodeProperties[] = [
+	{
+		displayName: 'Operation',
+		name: 'operation',
+		type: 'options',
+		noDataExpression: true,
+		displayOptions: { show: { resource: ['expense'] } },
+		options: [
+			{
+				name: 'Create',
+				value: 'create',
+				action: 'Create an expense',
+				routing: { request: { method: 'POST', url: '/expenses' } },
+			},
+			{
+				name: 'Get',
+				value: 'get',
+				action: 'Get an expense',
+				routing: { request: { method: 'GET', url: '=/expenses/{{ $parameter["expenseId"] }}' } },
+			},
+			{
+				name: 'Search',
+				value: 'search',
+				action: 'Search expenses',
+				routing: { request: { method: 'POST', url: '/expenses/search' } },
+			},
+			{
+				name: 'Close',
+				value: 'close',
+				action: 'Mark expense as reported',
+				routing: {
+					request: {
+						method: 'POST',
+						url: '=/expenses/{{ $parameter["expenseId"] }}/close',
+						body: {},
+					},
+				},
+			},
+			{
+				name: 'Open',
+				value: 'open',
+				action: 'Re-open a reported expense',
+				routing: {
+					request: {
+						method: 'POST',
+						url: '=/expenses/{{ $parameter["expenseId"] }}/open',
+						body: {},
+					},
+				},
+			},
+			{
+				name: 'Delete',
+				value: 'delete',
+				action: 'Soft-delete an expense',
+				routing: {
+					request: { method: 'DELETE', url: '=/expenses/{{ $parameter["expenseId"] }}' },
+				},
+			},
+			{
+				name: 'Search Drafts',
+				value: 'searchDrafts',
+				action: 'Search expense drafts (OCR inbox)',
+				routing: { request: { method: 'POST', url: '/expenses/drafts/search' } },
+			},
+			{
+				name: 'Get Statuses',
+				value: 'statuses',
+				action: 'Get expense status codes',
+				routing: { request: { method: 'GET', url: '/expenses/statuses' } },
+			},
+		],
+		default: 'create',
+	},
+];
+
+export const expenseFields: INodeProperties[] = [
+	{
+		displayName: 'Expense ID',
+		name: 'expenseId',
+		type: 'string',
+		required: true,
+		default: '',
+		displayOptions: {
+			show: { resource: ['expense'], operation: ['get', 'close', 'open', 'delete'] },
+		},
+	},
+
+	// Create
+	{
+		displayName: 'Supplier ID',
+		name: 'supplierId',
+		type: 'string',
+		default: '',
+		required: true,
+		description: 'UUID of an existing supplier',
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: {
+			send: {
+				type: 'body',
+				property: 'supplier',
+				value: '={{ { id: $value } }}',
+			},
+		},
+	},
+	{
+		displayName: 'Accounting Classification ID',
+		name: 'accountingClassificationId',
+		type: 'string',
+		default: '',
+		required: true,
+		description:
+			'UUID from /accounting/classifications/map — use Resource: Accounting → Get Classifications to discover. NOT the code or key.',
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: {
+			send: {
+				type: 'body',
+				property: 'accountingClassification',
+				value: '={{ { id: $value } }}',
+			},
+		},
+	},
+	{
+		displayName: 'Document Type',
+		name: 'documentType',
+		type: 'options',
+		options: expenseDocumentTypeOptions,
+		default: 320,
+		required: true,
+		description: 'Type of supplier document (do NOT use 10/quote — API rejects it for expenses)',
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: { send: { type: 'body', property: 'documentType' } },
+	},
+	{
+		displayName: 'Supplier Document Number',
+		name: 'number',
+		type: 'string',
+		default: '',
+		required: true,
+		description: '≥5-digit numeric string. "INV-001" and "1001" are both rejected.',
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: { send: { type: 'body', property: 'number' } },
+	},
+	{
+		displayName: 'Date',
+		name: 'date',
+		type: 'dateTime',
+		default: '',
+		required: true,
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: {
+			send: {
+				type: 'body',
+				property: 'date',
+				value: '={{ $value ? $value.split("T")[0] : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Reporting Date',
+		name: 'reportingDate',
+		type: 'dateTime',
+		default: '',
+		required: true,
+		description: 'The VAT-reporting period date (typically same as date)',
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: {
+			send: {
+				type: 'body',
+				property: 'reportingDate',
+				value: '={{ $value ? $value.split("T")[0] : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Language',
+		name: 'lang',
+		type: 'options',
+		options: [
+			{ name: 'Hebrew', value: 'he' },
+			{ name: 'English', value: 'en' },
+		],
+		default: 'he',
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: { send: { type: 'body', property: 'lang' } },
+	},
+	{
+		displayName: 'Currency',
+		name: 'currency',
+		type: 'string',
+		default: 'ILS',
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: { send: { type: 'body', property: 'currency' } },
+	},
+	{
+		displayName: 'Amount (incl. VAT)',
+		name: 'amount',
+		type: 'number',
+		default: 0,
+		required: true,
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: { send: { type: 'body', property: 'amount' } },
+	},
+	{
+		displayName: 'VAT Amount',
+		name: 'vat',
+		type: 'number',
+		default: 0,
+		required: true,
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: { send: { type: 'body', property: 'vat' } },
+	},
+	{
+		displayName: 'Amount Excluding VAT',
+		name: 'amountExcludeVat',
+		type: 'number',
+		default: 0,
+		required: true,
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: { send: { type: 'body', property: 'amountExcludeVat' } },
+	},
+	{
+		displayName: 'Description',
+		name: 'description',
+		type: 'string',
+		default: '',
+		required: true,
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: { send: { type: 'body', property: 'description' } },
+	},
+	{
+		displayName: 'Payment Date',
+		name: 'paymentDate',
+		type: 'dateTime',
+		default: '',
+		required: true,
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: {
+			send: {
+				type: 'body',
+				property: 'paymentDate',
+				value: '={{ $value ? $value.split("T")[0] : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Payment Type',
+		name: 'paymentType',
+		type: 'options',
+		options: [
+			{ name: 'Unpaid (-1)', value: -1 },
+			{ name: 'Deduction at source (0)', value: 0 },
+			{ name: 'Cash (1)', value: 1 },
+			{ name: 'Check (2)', value: 2 },
+			{ name: 'Credit Card (3)', value: 3 },
+			{ name: 'Bank Transfer (4)', value: 4 },
+			{ name: 'PayPal (5)', value: 5 },
+			{ name: 'Payment App / Bit / Apple Pay (10)', value: 10 },
+			{ name: 'Other (11)', value: 11 },
+		],
+		default: 4,
+		required: true,
+		displayOptions: { show: { resource: ['expense'], operation: ['create'] } },
+		routing: { send: { type: 'body', property: 'paymentType' } },
+	},
+
+	// Search
+	{
+		displayName: 'From Date',
+		name: 'fromDate',
+		type: 'dateTime',
+		default: '',
+		displayOptions: { show: { resource: ['expense'], operation: ['search', 'searchDrafts'] } },
+		routing: {
+			send: {
+				type: 'body',
+				property: 'fromDate',
+				value: '={{ $value ? $value.split("T")[0] : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'To Date',
+		name: 'toDate',
+		type: 'dateTime',
+		default: '',
+		displayOptions: { show: { resource: ['expense'], operation: ['search', 'searchDrafts'] } },
+		routing: {
+			send: {
+				type: 'body',
+				property: 'toDate',
+				value: '={{ $value ? $value.split("T")[0] : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Page',
+		name: 'page',
+		type: 'number',
+		default: 1,
+		displayOptions: { show: { resource: ['expense'], operation: ['search', 'searchDrafts'] } },
+		routing: { send: { type: 'body', property: 'page' } },
+	},
+	{
+		displayName: 'Page Size',
+		name: 'pageSize',
+		type: 'number',
+		default: 50,
+		typeOptions: { minValue: 1, maxValue: 100 },
+		displayOptions: { show: { resource: ['expense'], operation: ['search', 'searchDrafts'] } },
+		routing: { send: { type: 'body', property: 'pageSize' } },
+	},
+];

@@ -1,0 +1,142 @@
+import { INodeProperties } from 'n8n-workflow';
+
+export const itemOperations: INodeProperties[] = [
+	{
+		displayName: 'Operation',
+		name: 'operation',
+		type: 'options',
+		noDataExpression: true,
+		displayOptions: { show: { resource: ['item'] } },
+		options: [
+			{
+				name: 'Create',
+				value: 'create',
+				action: 'Create an item',
+				description: 'Catalog item. Both name AND description are required by Morning.',
+				routing: { request: { method: 'POST', url: '/items' } },
+			},
+			{
+				name: 'Get',
+				value: 'get',
+				action: 'Get an item',
+				routing: { request: { method: 'GET', url: '=/items/{{ $parameter["itemId"] }}' } },
+			},
+			{
+				name: 'Update',
+				value: 'update',
+				action: 'Update an item',
+				routing: { request: { method: 'PUT', url: '=/items/{{ $parameter["itemId"] }}' } },
+			},
+			{
+				name: 'Search',
+				value: 'search',
+				action: 'Search items',
+				routing: { request: { method: 'POST', url: '/items/search' } },
+			},
+			{
+				name: 'Delete',
+				value: 'delete',
+				action: 'Delete an item',
+				description: 'Allowed even when referenced by historical documents — docs keep their snapshot.',
+				routing: { request: { method: 'DELETE', url: '=/items/{{ $parameter["itemId"] }}' } },
+			},
+		],
+		default: 'create',
+	},
+];
+
+export const itemFields: INodeProperties[] = [
+	{
+		displayName: 'Item ID',
+		name: 'itemId',
+		type: 'string',
+		required: true,
+		default: '',
+		displayOptions: { show: { resource: ['item'], operation: ['get', 'update', 'delete'] } },
+	},
+	{
+		displayName: 'Name',
+		name: 'name',
+		type: 'string',
+		default: '',
+		required: true,
+		displayOptions: { show: { resource: ['item'], operation: ['create', 'update'] } },
+		routing: { send: { type: 'body', property: 'name' } },
+	},
+	{
+		displayName: 'Description',
+		name: 'description',
+		type: 'string',
+		default: '',
+		required: true,
+		description: 'REQUIRED by Morning (separate field from name)',
+		displayOptions: { show: { resource: ['item'], operation: ['create', 'update'] } },
+		routing: { send: { type: 'body', property: 'description' } },
+	},
+	{
+		displayName: 'Catalog Number',
+		name: 'catalogNumber',
+		type: 'string',
+		default: '',
+		displayOptions: { show: { resource: ['item'], operation: ['create', 'update'] } },
+		routing: {
+			send: { type: 'body', property: 'catalogNumber', value: '={{ $value || undefined }}' },
+		},
+	},
+	{
+		displayName: 'Price',
+		name: 'price',
+		type: 'number',
+		default: 0,
+		displayOptions: { show: { resource: ['item'], operation: ['create', 'update'] } },
+		routing: { send: { type: 'body', property: 'price' } },
+	},
+	{
+		displayName: 'Currency',
+		name: 'currency',
+		type: 'string',
+		default: 'ILS',
+		displayOptions: { show: { resource: ['item'], operation: ['create', 'update'] } },
+		routing: { send: { type: 'body', property: 'currency' } },
+	},
+	{
+		displayName: 'VAT Type',
+		name: 'vatType',
+		type: 'options',
+		options: [
+			{ name: '0 — Price BEFORE VAT', value: 0 },
+			{ name: '1 — VAT INCLUDED', value: 1 },
+			{ name: '2 — VAT exempt', value: 2 },
+		],
+		default: 1,
+		displayOptions: { show: { resource: ['item'], operation: ['create', 'update'] } },
+		routing: { send: { type: 'body', property: 'vatType' } },
+	},
+	{
+		displayName: 'Search Term',
+		name: 'searchTerm',
+		type: 'string',
+		default: '',
+		displayOptions: { show: { resource: ['item'], operation: ['search'] } },
+		routing: {
+			send: { type: 'body', property: 'name', value: '={{ $value || undefined }}' },
+		},
+	},
+	{
+		displayName: 'Page',
+		name: 'page',
+		type: 'number',
+		default: 1,
+		displayOptions: { show: { resource: ['item'], operation: ['search'] } },
+		routing: { send: { type: 'body', property: 'page' } },
+	},
+	{
+		displayName: 'Page Size',
+		name: 'pageSize',
+		type: 'number',
+		default: 50,
+		typeOptions: { minValue: 1, maxValue: 100 },
+		displayOptions: { show: { resource: ['item'], operation: ['search'] } },
+		routing: { send: { type: 'body', property: 'pageSize' } },
+	},
+];
