@@ -163,6 +163,20 @@ export const recurringOperations: INodeProperties[] = [
 				},
 			},
 			{
+				name: 'Approve',
+				value: 'approve',
+				action: 'Approve a pending recurring payment',
+				description:
+					'Approve a pending recurring payment so it becomes active (status 5 → 10). A new recurring is created pending; clients normally approve via a hosted link, but this approves it directly.',
+				routing: {
+					request: {
+						method: 'POST',
+						url: '=/payments/recurrings/{{ $parameter["recurringId"] }}/approve',
+						body: {},
+					},
+				},
+			},
+			{
 				name: 'Distribute',
 				value: 'distribute',
 				action: 'Distribute a recurring payment',
@@ -216,7 +230,7 @@ export const recurringFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
-				operation: ['get', 'update', 'delete', 'getJobs', 'recharge', 'unsuspend', 'distribute'],
+				operation: ['get', 'update', 'delete', 'getJobs', 'recharge', 'unsuspend', 'distribute', 'approve'],
 			},
 		},
 	},
@@ -253,6 +267,27 @@ export const recurringFields: INodeProperties[] = [
 		},
 		routing: {
 			send: { type: 'body', property: 'currency' },
+		},
+	},
+	{
+		displayName: 'Language',
+		name: 'lang',
+		type: 'options',
+		options: [
+			{ name: 'Hebrew', value: 'he' },
+			{ name: 'English', value: 'en' },
+		],
+		default: 'he',
+		required: true,
+		description: 'Language of the issued document (required by Create)',
+		displayOptions: {
+			show: {
+				resource: ['recurring'],
+				operation: ['create'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'lang' },
 		},
 	},
 	{

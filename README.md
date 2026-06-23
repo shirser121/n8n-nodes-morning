@@ -26,12 +26,12 @@ Built against the live sandbox API (verified 2026-05-31).
 | **Item (Catalog)** | Create · Get · Update · Search · Delete |
 | **Expense** | Create · Get · Search · Close · Open · Delete · Search Drafts · Get Statuses |
 | **Payment** | Create Payment Form · Search Links · Get Link · Search Saved Tokens · Charge Token |
-| **Recurring Payment (הוראת קבע)** | Create · Get · Update · Delete · Search · Count · Get Jobs · Recharge · Unsuspend · Distribute · Search Failed Jobs · Export |
+| **Recurring Payment (הוראת קבע)** | Create · Get · Update · Delete · Search · Count · Get Jobs · Recharge · Unsuspend · Approve · Distribute · Search Failed Jobs · Export |
 | **Retainer (ריטיינר)** | Create · Get · Update · Delete · Search · Count · Get Jobs · Process Job |
 | **Accounting** | Get Classifications Map |
 | **Business** | Get Me · Get Numbering · Get Footer · Get Business Types |
 
-**59 operations across 10 resources.**
+**60 operations across 10 resources.**
 
 > **Recurring Payment** and **Retainer** wrap Morning's *recurring-income* features (הכנסות קבועות). A **Recurring Payment** (`/payments/recurrings`) auto-charges a saved credit-card token on a schedule; a **Retainer** (`/retainers`) auto-issues a recurring document/payment-request to a client. These two endpoint families are **not in Morning's official (Apiary) API reference** — paths, verbs, bodies and enums were taken verbatim from Morning's own web-app client (and confirmed against a live recurring-payment response).
 >

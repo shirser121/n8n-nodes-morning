@@ -112,10 +112,6 @@ export async function recurringBodyPreSend(
 	const operation = this.getNodeParameter('operation', '') as string;
 	const body = { ...((requestOptions.body as Record<string, unknown>) ?? {}) };
 
-	// "No end date" is expressed as boolean false (the web app sends endDate: false).
-	if (body.endDate === undefined || body.endDate === '' || body.endDate === null) {
-		body.endDate = false;
-	}
 	if (body.descriptionRules === undefined) body.descriptionRules = '';
 
 	if (operation === 'update') {
@@ -138,8 +134,16 @@ export async function recurringBodyPreSend(
 		for (const k of ['startDate', 'day', 'cycles', 'clientId', 'clientEmail', 'pluginId', 'lang', 'flow']) {
 			delete body[k];
 		}
+		// Update expresses "no end date" as boolean false.
+		if (body.endDate === undefined || body.endDate === '' || body.endDate === null) {
+			body.endDate = false;
+		}
 	} else if (operation === 'create') {
 		if (body.flow === undefined) body.flow = 0;
+		// Create expresses "no end date" by omitting endDate — false is rejected (400).
+		if (body.endDate === undefined || body.endDate === '' || body.endDate === false || body.endDate === null) {
+			delete body.endDate;
+		}
 	}
 
 	requestOptions.body = body;
