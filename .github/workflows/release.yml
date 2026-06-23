@@ -40,7 +40,8 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Bump patch version (commit + tag)
-        run: npm version patch -m "chore(release): v%s [skip ci]"
+        run: |
+          npm version patch -m "chore(release): v%s [skip ci]"
       - name: Push version commit and tag
         run: git push --follow-tags
       - name: Publish to npm
