@@ -1,4 +1,5 @@
 import { INodeProperties } from 'n8n-workflow';
+import { recurringBodyPreSend } from '../helpers';
 
 /**
  * Recurring Payment (הוראת קבע) — `/payments/recurrings`.
@@ -11,7 +12,9 @@ import { INodeProperties } from 'n8n-workflow';
  * request body and enums below were taken from Morning's own web-app client and confirmed
  * against a live GET /payments/recurrings/{id} response: interval is "1"|"2"|"3"|"12"
  * (months, NOT "1m"); status is numeric (5 pending, 10 created, 20 started, 30 finished,
- * 50 canceled, 60 suspended, 70 expired). The create body nests document settings under data.*.
+ * 50 canceled, 60 suspended, 70 expired). Create uses a FLAT body (document fields at the
+ * top level); Update uses the stored NESTED shape (those fields under data{}) without
+ * startDate/day. The recurringBodyPreSend hook reshapes the body per operation.
  */
 const documentTypeOptions = [
 	{ name: 'Tax Invoice + Receipt (חשבונית מס/קבלה) — 320', value: 320 },
@@ -58,6 +61,9 @@ export const recurringOperations: INodeProperties[] = [
 						method: 'POST',
 						url: '/payments/recurrings',
 					},
+					send: {
+						preSend: [recurringBodyPreSend],
+					},
 				},
 			},
 			{
@@ -75,11 +81,14 @@ export const recurringOperations: INodeProperties[] = [
 				name: 'Update',
 				value: 'update',
 				action: 'Update a recurring payment',
-				description: 'Full replace — pass all fields you want to keep',
+				description: 'Update mutable fields. startDate/day are set at creation and are not sent.',
 				routing: {
 					request: {
 						method: 'PUT',
 						url: '=/payments/recurrings/{{ $parameter["recurringId"] }}',
+					},
+					send: {
+						preSend: [recurringBodyPreSend],
 					},
 				},
 			},
@@ -154,6 +163,20 @@ export const recurringOperations: INodeProperties[] = [
 				},
 			},
 			{
+				name: 'Approve',
+				value: 'approve',
+				action: 'Approve a pending recurring payment',
+				description:
+					'Approve a pending recurring payment so it becomes active (status 5 → 10). A new recurring is created pending; clients normally approve via a hosted link, but this approves it directly.',
+				routing: {
+					request: {
+						method: 'POST',
+						url: '=/payments/recurrings/{{ $parameter["recurringId"] }}/approve',
+						body: {},
+					},
+				},
+			},
+			{
 				name: 'Distribute',
 				value: 'distribute',
 				action: 'Distribute a recurring payment',
@@ -207,7 +230,7 @@ export const recurringFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
-				operation: ['get', 'update', 'delete', 'getJobs', 'recharge', 'unsuspend', 'distribute'],
+				operation: ['get', 'update', 'delete', 'getJobs', 'recharge', 'unsuspend', 'distribute', 'approve'],
 			},
 		},
 	},
@@ -219,11 +242,12 @@ export const recurringFields: INodeProperties[] = [
 		type: 'number',
 		default: 0,
 		required: true,
-		description: 'Amount charged each cycle, in the currency below',
+		description:
+			'Amount charged each cycle. Set at creation and CANNOT be changed afterwards (Morning locks it — create a new recurring to change the amount).',
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
-				operation: ['create', 'update'],
+				operation: ['create'],
 			},
 		},
 		routing: {
@@ -235,15 +259,36 @@ export const recurringFields: INodeProperties[] = [
 		name: 'currency',
 		type: 'string',
 		default: 'ILS',
-		description: 'ISO 4217 currency code to charge in (e.g. "ILS", "USD", "EUR")',
+		description: 'ISO 4217 currency code to charge in (e.g. "ILS", "USD", "EUR"). Set at creation; not changeable later.',
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
-				operation: ['create', 'update'],
+				operation: ['create'],
 			},
 		},
 		routing: {
 			send: { type: 'body', property: 'currency' },
+		},
+	},
+	{
+		displayName: 'Language',
+		name: 'lang',
+		type: 'options',
+		options: [
+			{ name: 'Hebrew', value: 'he' },
+			{ name: 'English', value: 'en' },
+		],
+		default: 'he',
+		required: true,
+		description: 'Language of the issued document (required by Create)',
+		displayOptions: {
+			show: {
+				resource: ['recurring'],
+				operation: ['create'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'lang' },
 		},
 	},
 	{
@@ -260,7 +305,7 @@ export const recurringFields: INodeProperties[] = [
 			},
 		},
 		routing: {
-			send: { type: 'body', property: 'data.description' },
+			send: { type: 'body', property: 'description' },
 		},
 	},
 	{
@@ -277,7 +322,7 @@ export const recurringFields: INodeProperties[] = [
 			},
 		},
 		routing: {
-			send: { type: 'body', property: 'data.documentType' },
+			send: { type: 'body', property: 'documentType' },
 		},
 	},
 	{
@@ -298,7 +343,7 @@ export const recurringFields: INodeProperties[] = [
 			},
 		},
 		routing: {
-			send: { type: 'body', property: 'data.documentVatType' },
+			send: { type: 'body', property: 'documentVatType' },
 		},
 	},
 	{
@@ -314,7 +359,7 @@ export const recurringFields: INodeProperties[] = [
 			},
 		},
 		routing: {
-			send: { type: 'body', property: 'data.skipHolidays' },
+			send: { type: 'body', property: 'skipHolidays' },
 		},
 	},
 	{
@@ -323,7 +368,7 @@ export const recurringFields: INodeProperties[] = [
 		type: 'string',
 		default: '',
 		description:
-			'Optional dynamic description template (e.g. month/period placeholders). Sent as data.descriptionRules.',
+			'Optional dynamic description template (e.g. "my" = month-year). On Create sent at top level; on Update nested under data.',
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
@@ -331,11 +376,7 @@ export const recurringFields: INodeProperties[] = [
 			},
 		},
 		routing: {
-			send: {
-				type: 'body',
-				property: 'data.descriptionRules',
-				value: '={{ $value || undefined }}',
-			},
+			send: { type: 'body', property: 'descriptionRules' },
 		},
 	},
 	{
@@ -344,11 +385,11 @@ export const recurringFields: INodeProperties[] = [
 		type: 'number',
 		default: 1,
 		typeOptions: { minValue: 1, maxValue: 28 },
-		description: 'Day of the month the card is charged (1-28; capped at 25 when Skip Holidays is on)',
+		description: 'Day of the month the card is charged (1-28; capped at 25 when Skip Holidays is on). Create only.',
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
-				operation: ['create', 'update'],
+				operation: ['create'],
 			},
 		},
 		routing: {
@@ -361,11 +402,11 @@ export const recurringFields: INodeProperties[] = [
 		type: 'options',
 		options: intervalOptions,
 		default: '1',
-		description: 'How often to charge',
+		description: 'How often to charge. Set at creation; not changeable later (Morning locks it).',
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
-				operation: ['create', 'update'],
+				operation: ['create'],
 			},
 		},
 		routing: {
@@ -377,12 +418,11 @@ export const recurringFields: INodeProperties[] = [
 		name: 'startDate',
 		type: 'dateTime',
 		default: '',
-		required: true,
-		description: 'First charge date (YYYY-MM-DD)',
+		description: 'First charge date (YYYY-MM-DD). Required on Create; ignored on Update (set at creation).',
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
-				operation: ['create', 'update'],
+				operation: ['create'],
 			},
 		},
 		routing: {

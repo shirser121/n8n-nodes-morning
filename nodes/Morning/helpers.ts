@@ -90,3 +90,77 @@ export async function autoComputeAmountPreSend(
 	requestOptions.body = body;
 	return requestOptions;
 }
+
+/**
+ * PreSend hook for the Recurring Payment resource: reshape the body to match Morning's
+ * (undocumented) recurring-payment contract, which differs between create and update.
+ *
+ * Verified live against the sandbox + a real GET response:
+ * - CREATE (POST /payments/recurrings): a FLAT body — document fields (description,
+ *   documentType, documentVatType, descriptionRules, skipHolidays) sit at the TOP level.
+ * - UPDATE (PUT /payments/recurrings/{id}): the stored (NESTED) shape — those document
+ *   fields go under `data{}`, and the create-only / immutable fields (startDate, day,
+ *   cycles, clientId, clientEmail, …) must NOT be sent.
+ * - `endDate` uses the boolean `false` to mean "no end date" (not "" and not omitted).
+ *
+ * The node's fields all populate the flat shape; this hook nests them for update.
+ */
+export async function recurringBodyPreSend(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const operation = this.getNodeParameter('operation', '') as string;
+	const body = { ...((requestOptions.body as Record<string, unknown>) ?? {}) };
+
+	if (body.descriptionRules === undefined) body.descriptionRules = '';
+
+	if (operation === 'update') {
+		const docKeys = [
+			'description',
+			'descriptionRules',
+			'documentType',
+			'documentVatType',
+			'skipHolidays',
+		];
+		const data = (body.data as Record<string, unknown>) ?? {};
+		for (const k of docKeys) {
+			if (body[k] !== undefined) {
+				data[k] = body[k];
+				delete body[k];
+			}
+		}
+		body.data = data;
+		// PUT is a replace of the stored document — drop create-only / immutable fields.
+		// amount, currency, interval, startDate and day are locked at creation (Morning ignores
+		// changes to them on update), so we don't send them.
+		for (const k of [
+			'amount',
+			'currency',
+			'interval',
+			'startDate',
+			'day',
+			'cycles',
+			'clientId',
+			'clientEmail',
+			'pluginId',
+			'lang',
+			'flow',
+		]) {
+			delete body[k];
+		}
+		// Update expresses "no end date" as boolean false.
+		if (body.endDate === undefined || body.endDate === '' || body.endDate === null) {
+			body.endDate = false;
+		}
+	} else if (operation === 'create') {
+		if (body.flow === undefined) body.flow = 0;
+		// Create expresses "no end date" by omitting endDate — false is rejected (400).
+		if (body.endDate === undefined || body.endDate === '' || body.endDate === false || body.endDate === null) {
+			delete body.endDate;
+		}
+	}
+
+	requestOptions.body = body;
+	return requestOptions;
+}
+
