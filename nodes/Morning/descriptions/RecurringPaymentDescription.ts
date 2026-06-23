@@ -242,11 +242,12 @@ export const recurringFields: INodeProperties[] = [
 		type: 'number',
 		default: 0,
 		required: true,
-		description: 'Amount charged each cycle, in the currency below',
+		description:
+			'Amount charged each cycle. Set at creation and CANNOT be changed afterwards (Morning locks it — create a new recurring to change the amount).',
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
-				operation: ['create', 'update'],
+				operation: ['create'],
 			},
 		},
 		routing: {
@@ -258,11 +259,11 @@ export const recurringFields: INodeProperties[] = [
 		name: 'currency',
 		type: 'string',
 		default: 'ILS',
-		description: 'ISO 4217 currency code to charge in (e.g. "ILS", "USD", "EUR")',
+		description: 'ISO 4217 currency code to charge in (e.g. "ILS", "USD", "EUR"). Set at creation; not changeable later.',
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
-				operation: ['create', 'update'],
+				operation: ['create'],
 			},
 		},
 		routing: {
@@ -401,11 +402,11 @@ export const recurringFields: INodeProperties[] = [
 		type: 'options',
 		options: intervalOptions,
 		default: '1',
-		description: 'How often to charge',
+		description: 'How often to charge. Set at creation; not changeable later (Morning locks it).',
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
-				operation: ['create', 'update'],
+				operation: ['create'],
 			},
 		},
 		routing: {

@@ -131,7 +131,21 @@ export async function recurringBodyPreSend(
 		}
 		body.data = data;
 		// PUT is a replace of the stored document — drop create-only / immutable fields.
-		for (const k of ['startDate', 'day', 'cycles', 'clientId', 'clientEmail', 'pluginId', 'lang', 'flow']) {
+		// amount, currency, interval, startDate and day are locked at creation (Morning ignores
+		// changes to them on update), so we don't send them.
+		for (const k of [
+			'amount',
+			'currency',
+			'interval',
+			'startDate',
+			'day',
+			'cycles',
+			'clientId',
+			'clientEmail',
+			'pluginId',
+			'lang',
+			'flow',
+		]) {
 			delete body[k];
 		}
 		// Update expresses "no end date" as boolean false.
