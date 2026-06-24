@@ -577,7 +577,8 @@ export const recurringFields: INodeProperties[] = [
 		name: 'searchTerm',
 		type: 'string',
 		default: '',
-		description: 'Free-text search across recurring payments (client/description)',
+		description:
+			'Free-text search. Matches the client NAME and the document description — NOT the client UUID. To filter by client UUID use Client ID below.',
 		displayOptions: {
 			show: {
 				resource: ['recurring'],
@@ -588,6 +589,27 @@ export const recurringFields: INodeProperties[] = [
 			send: {
 				type: 'body',
 				property: 'multiFieldsText',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Client ID',
+		name: 'searchClientId',
+		type: 'string',
+		default: '',
+		description:
+			'Filter to the recurring payments of a single client by their UUID (sent server-side as clientId). Discover via Client → Search. Free text does not match the UUID, so use this to scope by client.',
+		displayOptions: {
+			show: {
+				resource: ['recurring'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'clientId',
 				value: '={{ $value || undefined }}',
 			},
 		},
