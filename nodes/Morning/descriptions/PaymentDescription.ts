@@ -423,6 +423,27 @@ export const paymentFields: INodeProperties[] = [
 		},
 	},
 	{
+		displayName: 'Client (External Key)',
+		name: 'tokenExternalKey',
+		type: 'string',
+		default: '',
+		description:
+			'Only return saved tokens for this client. Tokens are keyed by the externalKey supplied when the link was created — typically the client UUID. Leave empty for all tokens.',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['searchTokens'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'externalKey',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
 		displayName: 'Page',
 		name: 'page',
 		type: 'number',
