@@ -502,6 +502,46 @@ export const documentFields: INodeProperties[] = [
 		},
 	},
 	{
+		displayName: 'Client ID',
+		name: 'searchClientId',
+		type: 'string',
+		default: '',
+		description: 'Only return documents belonging to this client (UUID). Leave empty for all clients.',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'clientId',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Client Name',
+		name: 'searchClientName',
+		type: 'string',
+		default: '',
+		description: 'Free-text filter on the client name shown on the document; leave empty to ignore',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'clientName',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
 		displayName: 'Page',
 		name: 'page',
 		type: 'number',
