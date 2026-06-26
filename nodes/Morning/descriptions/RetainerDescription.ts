@@ -629,11 +629,12 @@ export const retainerFields: INodeProperties[] = [
 
 	// ─── Search fields ────────────────────────────────────────────────────────────
 	{
-		displayName: 'Search Term',
+		displayName: 'Client Name',
 		name: 'searchTerm',
 		type: 'string',
 		default: '',
-		description: 'Free-text search across retainers (client/name)',
+		description:
+			'Filter retainers by client name (free text, partial match). The endpoint matches on client name only — it ignores client UUID and generic free text.',
 		displayOptions: {
 			show: {
 				resource: ['retainer'],
@@ -643,7 +644,7 @@ export const retainerFields: INodeProperties[] = [
 		routing: {
 			send: {
 				type: 'body',
-				property: 'multiFieldsText',
+				property: 'clientName',
 				value: '={{ $value || undefined }}',
 			},
 		},
