@@ -25,7 +25,7 @@ Built against the live sandbox API (verified 2026-05-31).
 | **Supplier** | Create · Get · Update · Search · Delete (tax ID validated client-side via mod-10) |
 | **Item (Catalog)** | Create · Get · Update · Search · Delete |
 | **Expense** | Create · Get · Search · Close · Open · Delete · Search Drafts · Get Statuses |
-| **Payment** | Create Payment Form · Search Links · Get Link · Search Saved Tokens · Charge Token |
+| **Payment** | Create Payment Form · Search Links · Get Link · Search Saved Tokens · Charge Token · Create Token Link |
 | **Recurring Payment (הוראת קבע)** | Create · Get · Update · Delete · Search · Count · Get Jobs · Recharge · Unsuspend · Approve · Distribute · Search Failed Jobs · Export |
 | **Retainer (ריטיינר)** | Create · Get · Update · Delete · Search · Count · Get Jobs · Process Job |
 | **Accounting** | Get Classifications Map |
