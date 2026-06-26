@@ -502,6 +502,170 @@ export const documentFields: INodeProperties[] = [
 		},
 	},
 	{
+		displayName: 'Client ID',
+		name: 'searchClientId',
+		type: 'string',
+		default: '',
+		description: 'Only return documents belonging to this client (UUID). Leave empty for all clients.',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'clientId',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Client Name',
+		name: 'searchClientName',
+		type: 'string',
+		default: '',
+		description: 'Free-text filter on the client name shown on the document; leave empty to ignore',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'clientName',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Search Text',
+		name: 'searchText',
+		type: 'string',
+		default: '',
+		description:
+			'Free-text search across multiple document fields (client name, description, number, etc.). Sent as multiFieldsText.',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'multiFieldsText',
+				value: '={{ $value ? [$value] : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Statuses',
+		name: 'searchStatus',
+		type: 'multiOptions',
+		options: [
+			{ name: 'Open (0)', value: 0 },
+			{ name: 'Closed (1)', value: 1 },
+			{ name: 'Manually Marked as Closed (2)', value: 2 },
+			{ name: 'Canceling Another Document (3)', value: 3 },
+			{ name: 'Canceled (4)', value: 4 },
+		],
+		default: [],
+		description: 'Filter results to these document statuses; leave empty for all statuses',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'status',
+				value: '={{ $value && $value.length > 0 ? $value : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Payment Types',
+		name: 'searchPaymentTypes',
+		type: 'multiOptions',
+		options: [
+			{ name: 'Unpaid (-1)', value: -1 },
+			{ name: 'Deduction at Source (0)', value: 0 },
+			{ name: 'Cash (1)', value: 1 },
+			{ name: 'Cheque (2)', value: 2 },
+			{ name: 'Credit Card (3)', value: 3 },
+			{ name: 'Bank Transfer (4)', value: 4 },
+			{ name: 'PayPal (5)', value: 5 },
+			{ name: 'Payment App (10)', value: 10 },
+			{ name: 'Other (11)', value: 11 },
+		],
+		default: [],
+		description: 'Filter results to documents containing these payment types; leave empty for all',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'paymentTypes',
+				value: '={{ $value && $value.length > 0 ? $value : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Reverse Charge',
+		name: 'searchReverseCharge',
+		type: 'options',
+		options: [
+			{ name: 'Any', value: '' },
+			{ name: 'Only Reverse Charge', value: 'true' },
+			{ name: 'Exclude Reverse Charge', value: 'false' },
+		],
+		default: '',
+		description: 'Filter by reverse-charge (עסקת מע״מ אפס) documents',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'reverseCharge',
+				value: '={{ $value === "" ? undefined : $value === "true" }}',
+			},
+		},
+	},
+	{
+		displayName: 'Sort By',
+		name: 'searchSort',
+		type: 'options',
+		options: [
+			{ name: 'Document Date', value: 'documentDate' },
+			{ name: 'Creation Date', value: 'creationDate' },
+		],
+		default: 'documentDate',
+		description: 'Field to sort the search results by',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'sort' },
+		},
+	},
+	{
 		displayName: 'Page',
 		name: 'page',
 		type: 'number',

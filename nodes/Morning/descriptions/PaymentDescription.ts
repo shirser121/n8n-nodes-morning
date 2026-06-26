@@ -73,6 +73,19 @@ export const paymentOperations: INodeProperties[] = [
 					},
 				},
 			},
+			{
+				name: 'Create Token Link',
+				value: 'createTokenUrl',
+				action: 'Create a save-card tokenization link',
+				description:
+					'Generate a link for a customer to save their card as a reusable token; optionally email it to them. Returns { success, url }.',
+				routing: {
+					request: {
+						method: 'POST',
+						url: '/payments/tokens/url',
+					},
+				},
+			},
 		],
 		default: 'createForm',
 	},
@@ -189,11 +202,11 @@ export const paymentFields: INodeProperties[] = [
 			{ name: 'English', value: 'en' },
 		],
 		default: 'he',
-		description: 'Language of the hosted checkout page and issued document',
+		description: 'Language of the hosted checkout / save-card page and issued document',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
-				operation: ['createForm'],
+				operation: ['createForm', 'createTokenUrl'],
 			},
 		},
 		routing: {
@@ -232,7 +245,7 @@ export const paymentFields: INodeProperties[] = [
 		displayOptions: {
 			show: {
 				resource: ['payment'],
-				operation: ['createForm'],
+				operation: ['createForm', 'createTokenUrl'],
 			},
 		},
 		routing: {
@@ -410,6 +423,27 @@ export const paymentFields: INodeProperties[] = [
 		},
 	},
 	{
+		displayName: 'Client (External Key)',
+		name: 'tokenExternalKey',
+		type: 'string',
+		default: '',
+		description:
+			'Only return saved tokens for this client. Tokens are keyed by the externalKey supplied when the link was created — typically the client UUID. Leave empty for all tokens.',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['searchTokens'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'externalKey',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
 		displayName: 'Page',
 		name: 'page',
 		type: 'number',
@@ -489,6 +523,72 @@ export const paymentFields: INodeProperties[] = [
 		},
 		routing: {
 			send: { type: 'body', property: 'description' },
+		},
+	},
+
+	// ─── Create Token Link (save a reusable card) ────────────────────────────────
+	{
+		displayName: 'Delivery Channel',
+		name: 'tokenChannel',
+		type: 'options',
+		options: [
+			{ name: 'Return Link Only', value: 1 },
+			{ name: 'Send by Email', value: 2 },
+		],
+		default: 2,
+		required: true,
+		description:
+			'How to deliver the save-card link: return the URL only, or also email it to the customer',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['createTokenUrl'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'channel' },
+		},
+	},
+	{
+		displayName: 'Customer Email',
+		name: 'tokenEmail',
+		type: 'string',
+		default: '',
+		placeholder: 'name@email.com',
+		description: 'Email address to send the save-card link to. Required when Delivery Channel is "Send by Email".',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['createTokenUrl'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'email',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'External Key',
+		name: 'externalKey',
+		type: 'string',
+		default: '',
+		description:
+			'Your own correlation key (e.g. client UUID or order ID) tied to the saved token, so you can match it back later. Leave empty to omit.',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['createTokenUrl'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'externalKey',
+				value: '={{ $value || undefined }}',
+			},
 		},
 	},
 ];
