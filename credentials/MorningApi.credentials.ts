@@ -7,8 +7,11 @@ import {
 	INodeProperties,
 } from 'n8n-workflow';
 
-const SANDBOX_BASE = 'https://sandbox.d.greeninvoice.co.il/api/v1';
-const PRODUCTION_BASE = 'https://api.greeninvoice.co.il/api/v1';
+// The OAuth token endpoint lives on a dedicated auth host, separate from the
+// resource API base (https://api.greeninvoice.co.il/api/v1) used by every
+// other call — see https://developers.morning.co.
+const SANDBOX_AUTH_BASE = 'https://api.sandbox.morning.dev';
+const PRODUCTION_AUTH_BASE = 'https://api.morning.co';
 
 export class MorningApi implements ICredentialType {
 	name = 'morningApi';
@@ -57,24 +60,29 @@ export class MorningApi implements ICredentialType {
 		this: IHttpRequestHelper,
 		credentials: ICredentialDataDecryptedObject,
 	): Promise<{ sessionToken: string }> {
-		const baseUrl =
-			(credentials.environment as string) === 'production' ? PRODUCTION_BASE : SANDBOX_BASE;
+		const authBase =
+			(credentials.environment as string) === 'production'
+				? PRODUCTION_AUTH_BASE
+				: SANDBOX_AUTH_BASE;
 
 		const response = (await this.helpers.httpRequest({
 			method: 'POST',
-			url: `${baseUrl}/account/token`,
+			url: `${authBase}/idp/v1/oauth/token`,
 			body: {
-				id: credentials.apiKeyId,
-				secret: credentials.apiKeySecret,
+				grant_type: 'client_credentials',
+				client_id: credentials.apiKeyId,
+				client_secret: credentials.apiKeySecret,
 			},
 			json: true,
-		})) as { token: string; expires: number };
+		})) as { accessToken: string; tokenType: string; expiresAt: number };
 
-		if (!response?.token) {
-			throw new Error('Morning /account/token did not return a token. Check API key id/secret.');
+		if (!response?.accessToken) {
+			throw new Error(
+				'Morning /idp/v1/oauth/token did not return an access token. Check API key id/secret.',
+			);
 		}
 
-		return { sessionToken: response.token };
+		return { sessionToken: response.accessToken };
 	}
 
 	authenticate: IAuthenticateGeneric = {
