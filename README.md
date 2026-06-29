@@ -13,7 +13,7 @@ Built against the live sandbox API (verified 2026-05-31).
 
 ### Credentials: `Morning (Green Invoice) API`
 - API Key ID + Secret + Environment (sandbox / production)
-- Auto-fetches JWT via `POST /account/token` (1-hour TTL, refreshed on demand via n8n's `expirable` token field)
+- Auto-fetches an OAuth access token via `POST /idp/v1/oauth/token` on the auth host (`api.morning.co` / `api.sandbox.morning.dev`) using `grant_type=client_credentials` — refreshed on demand via n8n's `expirable` token field
 - Credential test pings `GET /businesses/me`
 
 ### Node: `Morning` (action)
