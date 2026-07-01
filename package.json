@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-morning",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "n8n community node for Morning (Green Invoice) — Israeli accounting and invoicing API",
   "keywords": [
     "n8n-community-node-package",
