@@ -26,18 +26,21 @@ Built against the live sandbox API (verified 2026-05-31).
 | **Item (Catalog)** | Create · Get · Update · Search · Delete |
 | **Expense** | Create · Get · Search · Close · Open · Delete · Search Drafts · Get Statuses |
 | **Payment** | Create Payment Form · Search Links · Get Link · Search Saved Tokens · Charge Token · Create Token Link |
+| **Transaction (עסקה)** | Search · Get · Cancel · Refund · Count |
 | **Recurring Payment (הוראת קבע)** | Create · Get · Update · Delete · Search · Count · Get Jobs · Recharge · Unsuspend · Approve · Distribute · Search Failed Jobs · Export |
 | **Retainer (ריטיינר)** | Create · Get · Update · Delete · Search · Count · Get Jobs · Process Job |
 | **Accounting** | Get Classifications Map |
 | **Business** | Get Me · Get Numbering · Get Footer · Get Business Types |
 
-**60 operations across 10 resources.**
+**65 operations across 11 resources.**
 
 > **Recurring Payment** and **Retainer** wrap Morning's *recurring-income* features (הכנסות קבועות). A **Recurring Payment** (`/payments/recurrings`) auto-charges a saved credit-card token on a schedule; a **Retainer** (`/retainers`) auto-issues a recurring document/payment-request to a client. These two endpoint families are **not in Morning's official (Apiary) API reference** — paths, verbs, bodies and enums were taken verbatim from Morning's own web-app client (and confirmed against a live recurring-payment response).
 >
 > Note the two resources use **different `interval` encodings**: Recurring Payment is `1` / `2` / `3` / `12` (months); Retainer is `1m` / `2m` / `3m` / `6m` / `1y`. Status filters are numeric: recurring `5/10/20/30/50/60/70` (pending/created/started/finished/canceled/suspended/expired), retainer `1/2/3/10/20` (created/started/finished/paused/deleted).
 >
 > The **retainer** create/update body is nested (from the web app's `buildData()`): `{ startDate, endDate, interval, doc: { …document fields, type }, data: { paymentTerms, description } }`, built via dotted properties (`doc.*`, `data.*`). `paymentTerms` is a number (Immediate `-1`, or Net `10/15/30/45/60/75/90/120`); `data.description` is a token (`my` = month-year, `pmy` = previous-month-year) or free text.
+>
+> **Transaction** (`/payments/transactions`) reads and reverses the actual charge records behind payment forms, token charges and recurring runs — the counterpart to **Payment**, which *creates* the checkout links/forms/tokens. Search takes `{ documentId, from, to, page, pageSize }` (dates `YYYY-MM-DD`) and returns a paged `items[]` with `aggregations`; `Get` additionally returns the full `paymentData` (card number/expiry/token) that Search omits. **Cancel** (`/cancel`, no body) fully voids a still-cancellable charge; **Refund** (`/refund`, body `{ amount }` — omit for a full refund) returns money on a settled one. Both produce a new, linked reversal transaction (`type: 25`, negative amount, `relatedTransactionId` → the original). Only rows with `cancellable: true` can be voided. Paths/verbs were taken verbatim from Morning's own web-app payment service.
 
 ### Trigger: `Morning Trigger`
 - Receives the form-urlencoded webhook Morning POSTs to `notifyUrl` after a payment
@@ -135,6 +138,7 @@ n8n-nodes-morning/
 │   │       ├── ItemDescription.ts
 │   │       ├── ExpenseDescription.ts
 │   │       ├── PaymentDescription.ts
+│   │       ├── TransactionDescription.ts
 │   │       ├── RecurringPaymentDescription.ts
 │   │       ├── RetainerDescription.ts
 │   │       ├── AccountingDescription.ts
