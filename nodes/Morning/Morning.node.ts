@@ -21,6 +21,8 @@ import {
 	retainerOperations,
 	supplierFields,
 	supplierOperations,
+	transactionFields,
+	transactionOperations,
 } from './descriptions';
 
 export class Morning implements INodeType {
@@ -70,6 +72,7 @@ export class Morning implements INodeType {
 					{ name: 'Item (Catalog)', value: 'item' },
 					{ name: 'Expense', value: 'expense' },
 					{ name: 'Payment', value: 'payment' },
+					{ name: 'Transaction (עסקה)', value: 'transaction' },
 					{ name: 'Recurring Payment (הוראת קבע)', value: 'recurring' },
 					{ name: 'Retainer (ריטיינר)', value: 'retainer' },
 					{ name: 'Accounting', value: 'accounting' },
@@ -89,6 +92,8 @@ export class Morning implements INodeType {
 			...expenseFields,
 			...paymentOperations,
 			...paymentFields,
+			...transactionOperations,
+			...transactionFields,
 			...recurringOperations,
 			...recurringFields,
 			...retainerOperations,

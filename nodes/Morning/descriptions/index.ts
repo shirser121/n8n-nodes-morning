@@ -4,6 +4,7 @@ export * from './SupplierDescription';
 export * from './ItemDescription';
 export * from './ExpenseDescription';
 export * from './PaymentDescription';
+export * from './TransactionDescription';
 export * from './RecurringPaymentDescription';
 export * from './RetainerDescription';
 export * from './AccountingDescription';
