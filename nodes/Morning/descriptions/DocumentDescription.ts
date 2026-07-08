@@ -1,4 +1,5 @@
 import { INodeProperties } from 'n8n-workflow';
+import { paymentRequestDataPreSend } from '../helpers';
 
 export const documentOperations: INodeProperties[] = [
 	{
@@ -21,6 +22,9 @@ export const documentOperations: INodeProperties[] = [
 					request: {
 						method: 'POST',
 						url: '/documents',
+					},
+					send: {
+						preSend: [paymentRequestDataPreSend],
 					},
 				},
 			},
@@ -364,6 +368,73 @@ export const documentFields: INodeProperties[] = [
 		},
 		routing: {
 			send: { type: 'body', property: 'remarks' },
+		},
+	},
+
+	// ─── Online payment request (attach a pay-by-card link to this document) ─────
+	{
+		displayName: 'Enable Online Payment',
+		name: 'enableOnlinePayment',
+		type: 'boolean',
+		default: false,
+		description:
+			'Whether to attach an online payment link to this document (mirrors the "online payment" toggle in Morning\'s web UI). The customer pays via the link; Morning then auto-issues a linked receipt and closes this document.',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['create'],
+			},
+		},
+	},
+	{
+		displayName: 'Plugin ID',
+		name: 'paymentPluginId',
+		type: 'string',
+		default: '',
+		required: true,
+		description:
+			'Payment processor UUID. Discover via Document → Get Info (same type as this document) → paymentPlugins[0].id',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['create'],
+				enableOnlinePayment: [true],
+			},
+		},
+	},
+	{
+		displayName: 'Payment Methods',
+		name: 'paymentMethods',
+		type: 'multiOptions',
+		options: [
+			{ name: 'Credit Card (100)', value: 100 },
+			{ name: 'Bit (120)', value: 120 },
+			{ name: 'Apple Pay (150)', value: 150 },
+			{ name: 'Google Pay (160)', value: 160 },
+		],
+		default: [100],
+		required: true,
+		description: 'Which payment methods to offer on the payment link',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['create'],
+				enableOnlinePayment: [true],
+			},
+		},
+	},
+	{
+		displayName: 'Max Payments',
+		name: 'paymentMaxPayments',
+		type: 'number',
+		default: 1,
+		description: '1 = single charge. > 1 = installments (תשלומים) allowed on the payment link.',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['create'],
+				enableOnlinePayment: [true],
+			},
 		},
 	},
 

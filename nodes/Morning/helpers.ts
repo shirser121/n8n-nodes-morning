@@ -164,3 +164,48 @@ export async function recurringBodyPreSend(
 	return requestOptions;
 }
 
+/**
+ * PreSend hook for Document → Create: build `paymentRequestData` from the node's online-payment
+ * toggle fields, so a single POST /documents call can both issue the document AND attach an
+ * online payment link to it — same as Morning's own web app.
+ *
+ * Verified against a live sandbox request captured from Morning's web UI: creating a 305 Tax
+ * Invoice with "online payment" enabled sends, in the SAME body as the document fields:
+ *   paymentRequestData: { plugins: [{ id: <pluginId>, type: 12200, group: <100|120|150|160> }, ...], maxPayments }
+ * `type` was observed as the fixed constant 12200 for every plugin entry regardless of group.
+ * The response then carries a `paymentRequestId`; once the customer pays via the link, Morning
+ * auto-issues a linked receipt and closes this document.
+ */
+export async function paymentRequestDataPreSend(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const enabled = this.getNodeParameter('enableOnlinePayment', false) as boolean;
+	if (!enabled) return requestOptions;
+
+	const pluginId = this.getNodeParameter('paymentPluginId', '') as string;
+	const groups = this.getNodeParameter('paymentMethods', []) as number[];
+	const maxPayments = this.getNodeParameter('paymentMaxPayments', 1) as number;
+
+	if (!pluginId) {
+		throw new NodeOperationError(
+			this.getNode(),
+			'Plugin ID is required when Enable Online Payment is on. Discover it via Document → Get Info → paymentPlugins[0].id.',
+		);
+	}
+	if (!Array.isArray(groups) || groups.length === 0) {
+		throw new NodeOperationError(
+			this.getNode(),
+			'Select at least one Payment Method when Enable Online Payment is on.',
+		);
+	}
+
+	const body = (requestOptions.body ?? {}) as Record<string, unknown>;
+	body.paymentRequestData = {
+		plugins: groups.map((group) => ({ id: pluginId, type: 12200, group })),
+		maxPayments,
+	};
+	requestOptions.body = body;
+	return requestOptions;
+}
+
