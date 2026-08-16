@@ -1,5 +1,5 @@
 import { INodeProperties } from 'n8n-workflow';
-import { paymentRequestDataPreSend } from '../helpers';
+import { dueDateDefaultPreSend, paymentRequestDataPreSend } from '../helpers';
 
 export const documentOperations: INodeProperties[] = [
 	{
@@ -24,7 +24,7 @@ export const documentOperations: INodeProperties[] = [
 						url: '/documents',
 					},
 					send: {
-						preSend: [paymentRequestDataPreSend],
+						preSend: [dueDateDefaultPreSend, paymentRequestDataPreSend],
 					},
 				},
 			},
@@ -73,6 +73,9 @@ export const documentOperations: INodeProperties[] = [
 					request: {
 						method: 'POST',
 						url: '/documents/preview',
+					},
+					send: {
+						preSend: [dueDateDefaultPreSend],
 					},
 				},
 			},
@@ -275,6 +278,48 @@ export const documentFields: INodeProperties[] = [
 		},
 		routing: {
 			send: { type: 'body', property: 'vatType' },
+		},
+	},
+	{
+		displayName: 'Document Date',
+		name: 'date',
+		type: 'dateTime',
+		default: '',
+		description:
+			'Issue date printed on the document (YYYY-MM-DD). Leave empty to default to today, same as Morning\'s web UI.',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['create', 'preview'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'date',
+				value: '={{ $value ? $value.split("T")[0] : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Due Date',
+		name: 'dueDate',
+		type: 'dateTime',
+		default: '',
+		description:
+			'Payment due date printed on the document ("לתשלום עד"). Sent as "dueDate" (YYYY-MM-DD). Leave empty to default to the LAST DAY OF THE MONTH (relative to Document Date, or today if that\'s also empty) — set an explicit date here to override.',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['create', 'preview'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'dueDate',
+				value: '={{ $value ? $value.split("T")[0] : undefined }}',
+			},
 		},
 	},
 	{
