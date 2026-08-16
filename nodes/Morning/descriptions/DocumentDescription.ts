@@ -1,5 +1,5 @@
 import { INodeProperties } from 'n8n-workflow';
-import { paymentRequestDataPreSend } from '../helpers';
+import { dueDateDefaultPreSend, paymentRequestDataPreSend } from '../helpers';
 
 export const documentOperations: INodeProperties[] = [
 	{
@@ -24,7 +24,7 @@ export const documentOperations: INodeProperties[] = [
 						url: '/documents',
 					},
 					send: {
-						preSend: [paymentRequestDataPreSend],
+						preSend: [dueDateDefaultPreSend, paymentRequestDataPreSend],
 					},
 				},
 			},
@@ -73,6 +73,9 @@ export const documentOperations: INodeProperties[] = [
 					request: {
 						method: 'POST',
 						url: '/documents/preview',
+					},
+					send: {
+						preSend: [dueDateDefaultPreSend],
 					},
 				},
 			},
@@ -304,7 +307,7 @@ export const documentFields: INodeProperties[] = [
 		type: 'dateTime',
 		default: '',
 		description:
-			'Payment due date printed on the document ("לתשלום עד" — e.g. for Net-30 terms). Sent as "dueDate" (YYYY-MM-DD); omitted entirely if left empty, same as picking no due date in Morning\'s web UI.',
+			'Payment due date printed on the document ("לתשלום עד"). Sent as "dueDate" (YYYY-MM-DD). Leave empty to default to the LAST DAY OF THE MONTH (relative to Document Date, or today if that\'s also empty) — set an explicit date here to override.',
 		displayOptions: {
 			show: {
 				resource: ['document'],

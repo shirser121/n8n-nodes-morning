@@ -164,6 +164,52 @@ export async function recurringBodyPreSend(
 	return requestOptions;
 }
 
+/** "YYYY-MM-DD" for the last calendar day of 1-based `month` in `year` (handles leap years). */
+function lastDayOfMonth(year: number, month: number): string {
+	const daysInMonth = new Date(year, month, 0).getDate();
+	return `${year}-${String(month).padStart(2, '0')}-${String(daysInMonth).padStart(2, '0')}`;
+}
+
+/**
+ * PreSend hook for Document → Create/Preview: default `dueDate` (the "לתשלום עד" line
+ * printed on the document) to the LAST calendar day of the document's month, whenever the
+ * user leaves the Due Date field blank — mirrors the common Israeli "עד סוף החודש" payment
+ * term instead of silently omitting the field.
+ *
+ * Anchored on the explicit `Document Date` field when the user set one (read as a plain
+ * "YYYY-MM-DD" prefix, like the rest of this node's date handling — no Date-object parsing,
+ * so there's no timezone-shift risk); otherwise on today, since that's the date Morning
+ * itself stamps on the document when `date` is omitted. Does nothing if the user already
+ * typed an explicit Due Date.
+ */
+export async function dueDateDefaultPreSend(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const dueDate = this.getNodeParameter('dueDate', '') as string;
+	if (dueDate) return requestOptions;
+
+	const docDate = this.getNodeParameter('date', '') as string;
+	let year: number;
+	let month: number; // 1-based
+
+	if (docDate) {
+		const [y, m] = docDate.split('T')[0].split('-');
+		year = parseInt(y, 10);
+		month = parseInt(m, 10);
+		if (!year || !month) return requestOptions; // malformed — leave dueDate unset rather than guess
+	} else {
+		const today = new Date();
+		year = today.getFullYear();
+		month = today.getMonth() + 1;
+	}
+
+	const body = (requestOptions.body ?? {}) as Record<string, unknown>;
+	body.dueDate = lastDayOfMonth(year, month);
+	requestOptions.body = body;
+	return requestOptions;
+}
+
 /**
  * PreSend hook for Document → Create: build `paymentRequestData` from the node's online-payment
  * toggle fields, so a single POST /documents call can both issue the document AND attach an
