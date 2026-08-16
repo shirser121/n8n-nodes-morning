@@ -278,6 +278,48 @@ export const documentFields: INodeProperties[] = [
 		},
 	},
 	{
+		displayName: 'Document Date',
+		name: 'date',
+		type: 'dateTime',
+		default: '',
+		description:
+			'Issue date printed on the document (YYYY-MM-DD). Leave empty to default to today, same as Morning\'s web UI.',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['create', 'preview'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'date',
+				value: '={{ $value ? $value.split("T")[0] : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Due Date',
+		name: 'dueDate',
+		type: 'dateTime',
+		default: '',
+		description:
+			'Payment due date printed on the document ("לתשלום עד" — e.g. for Net-30 terms). Sent as "dueDate" (YYYY-MM-DD); omitted entirely if left empty, same as picking no due date in Morning\'s web UI.',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['create', 'preview'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'dueDate',
+				value: '={{ $value ? $value.split("T")[0] : undefined }}',
+			},
+		},
+	},
+	{
 		displayName: 'Client (JSON)',
 		name: 'client',
 		type: 'json',

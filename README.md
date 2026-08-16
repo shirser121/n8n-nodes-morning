@@ -100,6 +100,7 @@ The **Morning** node and **Morning Trigger** appear in the node panel.
 - **Field naming** is non-obvious. The node uses Morning's exact names: `income` (not `items`), `payment` singular (not `payments`), `emails` always array (not `email`), `lang` (not `language`), `remarks` (not `notes`).
 - **VAT math** — `amount` must match `income[]` based on `vatType`. The Auto-Compute toggle on payment-form does this for you. Manual math also works — the VAT-type dropdown spells out which mode means what.
 - **Documents are immutable** — there is no Update operation on Document, because Morning returns 405. To fix an issued doc, create a credit note (type 330) with `linkedDocumentIds`, then issue a new one.
+- **Document → Create/Preview has `Document Date` and `Due Date` fields** (`date` / `dueDate`, both `YYYY-MM-DD`) — `Due Date` is what prints as "לתשלום עד" on the PDF. Both are optional and omitted from the request when left blank: `date` then defaults to today and `dueDate` prints nothing, same as not setting them in Morning's web UI.
 - **Clients/suppliers with docs/expenses can't be deleted** — set `active: false` instead (via Update).
 - **`taxId` must pass Israeli mod-10 checksum**. The node validates this client-side. Test value: `000000018`.
 - **Expense `documentType`** — use the supplier's invoice kind (305/320/400), NOT 10 (quote). The dropdown only shows valid options.
