@@ -7,6 +7,9 @@ name: Release (auto-version + publish)
 # A manual run (Actions -> Run workflow) publishes the version already on main
 # without bumping, e.g. to retry a publish that failed after the bump.
 #
+# The npm token may only stage a version: after the run, approve it on
+# npmjs.com (or `npm stage approve <stage-id>`) with 2FA to make it live.
+#
 # One-time setup: repo secret NPM_TOKEN must hold an npm *automation* token
 # (npmjs.com -> Access Tokens -> Generate -> Automation).
 
@@ -33,7 +36,7 @@ jobs:
           fetch-depth: 0
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: 'https://registry.npmjs.org'
       - run: npm ci
       - run: npm run lint
@@ -52,6 +55,6 @@ jobs:
         if: github.event_name == 'push'
         run: git push --follow-tags
       - name: Publish to npm
-        run: npm publish --access public
+        run: npx -y npm@12 stage publish --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
