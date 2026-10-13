@@ -4,12 +4,16 @@ name: Release (auto-version + publish)
 # and publishes to npm. The version-bump commit is marked [skip ci] so it
 # does not re-trigger this workflow (no infinite loop).
 #
+# A manual run (Actions -> Run workflow) publishes the version already on main
+# without bumping, e.g. to retry a publish that failed after the bump.
+#
 # One-time setup: repo secret NPM_TOKEN must hold an npm *automation* token
 # (npmjs.com -> Access Tokens -> Generate -> Automation).
 
 on:
   push:
     branches: [main]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -22,7 +26,7 @@ jobs:
   release:
     runs-on: ubuntu-latest
     # Skip the run created by our own version-bump commit.
-    if: ${{ !contains(github.event.head_commit.message, '[skip ci]') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip ci]') }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -36,13 +40,16 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - name: Configure git identity
+        if: github.event_name == 'push'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
       - name: Bump patch version (commit + tag)
+        if: github.event_name == 'push'
         run: |
           npm version patch -m "chore(release): v%s [skip ci]"
       - name: Push version commit and tag
+        if: github.event_name == 'push'
         run: git push --follow-tags
       - name: Publish to npm
         run: npm publish --access public
