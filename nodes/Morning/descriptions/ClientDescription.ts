@@ -111,8 +111,7 @@ export const clientFields: INodeProperties[] = [
 		name: 'emails',
 		type: 'string',
 		default: '',
-		required: true,
-		description: 'Comma-separated email addresses (sent as array; required by Morning API)',
+		description: 'Comma-separated email addresses (sent as array); not sent when empty',
 		displayOptions: {
 			show: {
 				resource: ['client'],
@@ -124,7 +123,7 @@ export const clientFields: INodeProperties[] = [
 				type: 'body',
 				property: 'emails',
 				value:
-					'={{ $value ? $value.split(",").map(s => s.trim()).filter(Boolean) : [] }}',
+					'={{ $value ? $value.split(",").map(s => s.trim()).filter(Boolean) : undefined }}',
 			},
 		},
 	},

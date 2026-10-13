@@ -264,12 +264,13 @@ export const documentFields: INodeProperties[] = [
 		name: 'vatType',
 		type: 'options',
 		options: [
-			{ name: '0 — Price BEFORE VAT (amount = post-VAT)', value: 0 },
-			{ name: '1 — VAT INCLUDED in price (amount = price sum)', value: 1 },
-			{ name: '2 — VAT exempt', value: 2 },
+			{ name: '0 — Default (by business type)', value: 0 },
+			{ name: '1 — Exempt (no VAT on the whole document)', value: 1 },
+			{ name: '2 — Mixed (exempt and taxable rows)', value: 2 },
 		],
-		default: 1,
-		description: 'How line prices relate to VAT: 0 = before VAT, 1 = VAT included, 2 = exempt',
+		default: 0,
+		description:
+			'VAT treatment of the whole document. This is not the per-line vatType inside Income Lines (0 = VAT added, 1 = VAT included, 2 = exempt)',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -326,9 +327,9 @@ export const documentFields: INodeProperties[] = [
 		displayName: 'Client (JSON)',
 		name: 'client',
 		type: 'json',
-		default: '{\n  "name": "",\n  "emails": [""]\n}',
+		default: '{\n  "name": "",\n  "emails": []\n}',
 		description:
-			'Client object. Pass {"id":"<existing-uuid>"} or full {"add":true,"name":...,"emails":[...]} to auto-create.',
+			'Client object. Pass {"id":"<existing-uuid>"} for an existing client, or {"name":...,"emails":[...]} for a new one. Add "add": true to also save the client to the clients list.',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -346,7 +347,7 @@ export const documentFields: INodeProperties[] = [
 		default:
 			'[\n  {\n    "description": "",\n    "quantity": 1,\n    "price": 0,\n    "currency": "ILS",\n    "vatType": 1\n  }\n]',
 		description:
-			'Line items array. Field is "income" (not "items"). Price must match the VAT type chosen above.',
+			'Line items array. Field is "income" (not "items"). Each line has its own vatType: 0 = VAT added on top of price, 1 = VAT included in price, 2 = exempt.',
 		displayOptions: {
 			show: {
 				resource: ['document'],
@@ -375,6 +376,31 @@ export const documentFields: INodeProperties[] = [
 				property: 'linkedDocumentIds',
 				value:
 					'={{ $value ? $value.split(",").map(s => s.trim()).filter(Boolean) : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Link Type',
+		name: 'linkType',
+		type: 'options',
+		options: [
+			{ name: 'Related (Link)', value: 'link' },
+			{ name: 'Cancels the Linked Document', value: 'cancel' },
+		],
+		default: 'link',
+		description: 'How this document relates to the Linked Document IDs. Only sent when Linked Document IDs is not empty.',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['create'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'linkType',
+				value:
+					'={{ String($parameter["linkedDocumentIds"] || "").split(",").map(s => s.trim()).filter(Boolean).length ? $value : undefined }}',
 			},
 		},
 	},
@@ -454,8 +480,8 @@ export const documentFields: INodeProperties[] = [
 		options: [
 			{ name: 'Credit Card (100)', value: 100 },
 			{ name: 'Bit (120)', value: 120 },
-			{ name: 'Apple Pay (150)', value: 150 },
-			{ name: 'Google Pay (160)', value: 160 },
+			{ name: 'Google Pay (150)', value: 150 },
+			{ name: 'Apple Pay (160)', value: 160 },
 		],
 		default: [100],
 		required: true,
@@ -653,6 +679,46 @@ export const documentFields: INodeProperties[] = [
 			send: {
 				type: 'body',
 				property: 'clientName',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Document Number',
+		name: 'searchNumber',
+		type: 'number',
+		default: 0,
+		description: 'Filter by document serial number (e.g. 12001); leave 0 to ignore',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'number',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Description',
+		name: 'searchDescription',
+		type: 'string',
+		default: '',
+		description: 'Filter by the document description text; leave empty to ignore',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'description',
 				value: '={{ $value || undefined }}',
 			},
 		},

@@ -9,6 +9,16 @@ Full coverage of the API surfaces a real workflow needs: documents, clients, sup
 
 Built against the live sandbox API (verified 2026-05-31).
 
+## Changes in 0.2.x
+
+- **Payment → Charge Token** now sends the required `type`, `currency`, `vatType` and `lang`, plus optional `maxPayments`, `income`, `remarks` and `notifyUrl`. Previously every call failed with error 2403.
+- **Document → Create/Preview `vatType`** is relabeled to Morning's real document-level meaning (0 Default, 1 Exempt, 2 Mixed) and the default changed from 1 to 0. Documents created with the old default were issued with 0% VAT. A node that saved the old value 2 ("VAT exempt") now means "Mixed"; set 1 for exempt.
+- **Apple Pay / Google Pay labels corrected.** The wire values are unchanged (150 = Google Pay, 160 = Apple Pay), but a node saved as "Apple Pay (150)" was always sending Google Pay.
+- **Errors in 2xx bodies now raise an error**, for example Create Payment Form returning `success: false`.
+- Document → Create has a new `Link Type` field (related or cancels the linked document).
+- Client emails are now optional.
+- Document → Search has number and description filters.
+
 ## What's included
 
 ### Credentials: `Morning (Green Invoice) API`
@@ -43,6 +53,8 @@ Built against the live sandbox API (verified 2026-05-31).
 > **Transaction** (`/payments/transactions`) reads and reverses the actual charge records behind payment forms, token charges and recurring runs — the counterpart to **Payment**, which *creates* the checkout links/forms/tokens. Search takes `{ documentId, from, to, page, pageSize }` (dates `YYYY-MM-DD`) and returns a paged `items[]` with `aggregations`; `Get` additionally returns the full `paymentData` (card number/expiry/token) that Search omits. **Cancel** (`/cancel`, no body) fully voids a still-cancellable charge; **Refund** (`/refund`, body `{ amount }` — omit for a full refund) returns money on a settled one. Both produce a new, linked reversal transaction (`type: 25`, negative amount, `relatedTransactionId` → the original). Only rows with `cancellable: true` can be voided. Paths/verbs were taken verbatim from Morning's own web-app payment service.
 >
 > **Document → Create's "Enable Online Payment"** attaches an online payment link (credit card / Bit / Apple Pay / Google Pay) directly to the document being created — the same one-call flow Morning's own web app uses when you toggle online payment on a Tax Invoice. It sends `paymentRequestData: { plugins: [{ id: pluginId, type: 12200, group }, ...], maxPayments }` in the *same* `POST /documents` body (not a separate `/payments/form` call); the response carries a `paymentRequestId`, and once the customer pays, Morning auto-issues a linked receipt and closes the document. This is distinct from **Payment → Create Payment Form**, which always creates a brand-new combo document (320/400/405) from scratch rather than attaching a payment link to an existing/being-created document. Undocumented in Morning's Apiary reference — reverse-engineered from a live sandbox request captured from the web app's network traffic.
+
+> **Payment → Charge Token** (`POST /payments/tokens/{id}/charge`) requires `type` (320 / 400 / 405 / 600), `amount`, `currency`, `vatType` and `lang`; Morning issues a document of that type and returns it (including `transactionId`). The `vatType` here is **document-level** (0 = default by business type, 1 = exempt, 2 = mixed), unlike the line-item `vatType` inside `income` (0 = VAT added, 1 = VAT included, 2 = exempt). `income` is optional: when omitted, Morning creates one row from `description` + `amount`.
 
 ### Trigger: `Morning Trigger`
 - Receives the form-urlencoded webhook Morning POSTs to `notifyUrl` after a payment
@@ -98,6 +110,10 @@ The **Morning** node and **Morning Trigger** appear in the node panel.
 ## Gotchas built into the node (so you don't trip on them)
 
 - **Field naming** is non-obvious. The node uses Morning's exact names: `income` (not `items`), `payment` singular (not `payments`), `emails` always array (not `email`), `lang` (not `language`), `remarks` (not `notes`).
+- **`vatType` differs by operation.** Document → Create/Preview sends the spec's *document-level* `vatType` (0 = default by business type, 1 = exempt — the whole document gets 0% VAT, 2 = mixed); VAT per line goes in each `income` line's own `vatType` (0 = VAT added, 1 = VAT included, 2 = exempt). Payment → Create Payment Form keeps its own dropdown (0 = before VAT, 1 = VAT included, 2 = exempt), because Morning's `/payments/form` treats `1` as VAT included, contrary to the spec.
+- **Apple Pay / Google Pay codes** — `150` = Google Pay, `160` = Apple Pay (per Morning's `PaymentPluginGroup`), in both Document → Create's online payment and Payment → Create Payment Form.
+- **Errors are surfaced, not swallowed** — 4xx/5xx responses fail the node through n8n's standard error handling, and a 2xx body that carries an error (`{ success: false }` or a non-zero `errorCode`, as `/payments/form` returns with HTTP 201) fails it with `Morning error <code>: <message>`; the raw response body (up to 2000 characters) is in the error description. Other successful responses are unchanged.
+- **Document → Create `Link Type`** (`link` = related, `cancel` = cancels the linked document) is sent only when `Linked Document IDs` is set.
 - **VAT math** — `amount` must match `income[]` based on `vatType`. The Auto-Compute toggle on payment-form does this for you. Manual math also works — the VAT-type dropdown spells out which mode means what.
 - **Documents are immutable** — there is no Update operation on Document, because Morning returns 405. To fix an issued doc, create a credit note (type 330) with `linkedDocumentIds`, then issue a new one.
 - **Document → Create/Preview has `Document Date` and `Due Date` fields** (`date` / `dueDate`, both `YYYY-MM-DD`) — `Due Date` is what prints as "לתשלום עד" on the PDF. Both are optional: leave `Document Date` blank for today (Morning's own default). Leave `Due Date` blank and the node fills in the **last day of the month** for you (relative to `Document Date`, or today if that's blank too) — set an explicit date to override.

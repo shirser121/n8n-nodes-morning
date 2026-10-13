@@ -1,6 +1,11 @@
 import {
+	IDataObject,
 	IExecuteSingleFunctions,
 	IHttpRequestOptions,
+	IN8nHttpFullResponse,
+	INodeExecutionData,
+	JsonObject,
+	NodeApiError,
 	NodeOperationError,
 } from 'n8n-workflow';
 
@@ -255,3 +260,72 @@ export async function paymentRequestDataPreSend(
 	return requestOptions;
 }
 
+
+/**
+ * PreSend hook for Payment → Charge Token: send `income` only when the Income Lines field holds
+ * a non-empty JSON array. Empty, whitespace-only and `[]` input omit the field so Morning builds
+ * one row from the description and amount.
+ */
+export async function chargeIncomePreSend(
+	this: IExecuteSingleFunctions,
+	requestOptions: IHttpRequestOptions,
+): Promise<IHttpRequestOptions> {
+	const raw = this.getNodeParameter('chargeIncome', '[]') as unknown;
+	let income: unknown = raw;
+
+	if (typeof raw === 'string') {
+		if (raw.trim() === '') return requestOptions;
+		try {
+			income = JSON.parse(raw);
+		} catch {
+			throw new NodeOperationError(this.getNode(), 'Income Lines is not valid JSON');
+		}
+	}
+
+	if (!Array.isArray(income)) {
+		throw new NodeOperationError(this.getNode(), 'Income Lines must be a JSON array');
+	}
+	if (income.length === 0) return requestOptions;
+
+	const body = (requestOptions.body ?? {}) as Record<string, unknown>;
+	body.income = income;
+	requestOptions.body = body;
+	return requestOptions;
+}
+
+/**
+ * PostReceive hook: surface Morning errors carried in successful (2xx) responses as a NodeApiError.
+ *
+ * `/payments/form` returns HTTP 201 with `{ success: false, errorCode, errorDescription }`. 4xx/5xx
+ * responses are thrown by n8n itself, which keeps the 401 token-refresh retry working. A split of a
+ * top-level array body into one item per element is done here because a postReceive hook disables
+ * n8n's automatic split.
+ */
+export async function morningErrorPostReceive(
+	this: IExecuteSingleFunctions,
+	items: INodeExecutionData[],
+	response: IN8nHttpFullResponse,
+): Promise<INodeExecutionData[]> {
+	const body = response.body;
+	const record =
+		body !== null && typeof body === 'object' && !Array.isArray(body) && !Buffer.isBuffer(body)
+			? (body as Record<string, unknown>)
+			: undefined;
+	const errorCode = record?.errorCode;
+	const hasErrorCode = errorCode !== undefined && errorCode !== null && Number(errorCode) !== 0;
+
+	if (hasErrorCode || record?.success === false) {
+		const code = hasErrorCode ? errorCode : response.statusCode;
+		const message = String(record?.errorMessage ?? record?.errorDescription ?? 'Unknown error');
+		const raw = JSON.stringify(body) ?? '';
+		throw new NodeApiError(this.getNode(), (record ?? {}) as JsonObject, {
+			message: `Morning error ${code}: ${message}`,
+			description: raw.length > 2000 ? `${raw.slice(0, 2000)}…` : raw,
+			httpCode: String(response.statusCode),
+		});
+	}
+
+	return Array.isArray(body)
+		? (body as IDataObject[]).map((json) => ({ json }))
+		: items;
+}
