@@ -1,5 +1,6 @@
 import type { INodeType, INodeTypeDescription } from 'n8n-workflow';
 
+import { morningErrorPostReceive } from './helpers';
 import {
 	accountingFields,
 	accountingOperations,
@@ -54,6 +55,7 @@ export class Morning implements INodeType {
 		requestDefaults: {
 			baseURL:
 				'={{ $credentials.environment === "production" ? "https://api.greeninvoice.co.il/api/v1" : "https://sandbox.d.greeninvoice.co.il/api/v1" }}',
+			ignoreHttpStatusErrors: true,
 			headers: {
 				'Content-Type': 'application/json',
 				Accept: 'application/json',
@@ -79,6 +81,11 @@ export class Morning implements INodeType {
 					{ name: 'Business', value: 'business' },
 				],
 				default: 'document',
+				routing: {
+					output: {
+						postReceive: [morningErrorPostReceive],
+					},
+				},
 			},
 			...documentOperations,
 			...documentFields,

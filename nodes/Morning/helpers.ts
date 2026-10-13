@@ -1,6 +1,10 @@
 import {
 	IExecuteSingleFunctions,
 	IHttpRequestOptions,
+	IN8nHttpFullResponse,
+	INodeExecutionData,
+	JsonObject,
+	NodeApiError,
 	NodeOperationError,
 } from 'n8n-workflow';
 
@@ -255,3 +259,42 @@ export async function paymentRequestDataPreSend(
 	return requestOptions;
 }
 
+
+/**
+ * PostReceive hook: surface Morning errors as a NodeApiError.
+ *
+ * Morning error bodies are `{ errorCode, errorMessage }`; `/payments/form` instead returns HTTP 201
+ * with `{ success: false, errorCode, errorDescription }`. The request runs with
+ * `ignoreHttpStatusErrors` (see Morning.node.ts) so 4xx bodies reach this hook. Successful
+ * responses are returned untouched.
+ */
+export async function morningErrorPostReceive(
+	this: IExecuteSingleFunctions,
+	items: INodeExecutionData[],
+	response: IN8nHttpFullResponse,
+): Promise<INodeExecutionData[]> {
+	const body = response.body;
+	const record =
+		body !== null && typeof body === 'object' && !Array.isArray(body) && !Buffer.isBuffer(body)
+			? (body as Record<string, unknown>)
+			: undefined;
+	const errorCode = record?.errorCode;
+	const hasErrorCode = errorCode !== undefined && errorCode !== null && Number(errorCode) !== 0;
+	const isHttpError = response.statusCode >= 400;
+
+	if (!hasErrorCode && !isHttpError && record?.success !== false) return items;
+
+	const code = hasErrorCode ? errorCode : response.statusCode;
+	const message = String(
+		record?.errorMessage ?? record?.errorDescription ?? response.statusMessage ?? 'Unknown error',
+	);
+	throw new NodeApiError(
+		this.getNode(),
+		(record ?? { message }) as JsonObject,
+		{
+			message: `Morning error ${code}: ${message}`,
+			description: typeof body === 'string' ? body : JSON.stringify(body),
+			httpCode: String(response.statusCode),
+		},
+	);
+}

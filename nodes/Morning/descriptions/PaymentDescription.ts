@@ -260,8 +260,8 @@ export const paymentFields: INodeProperties[] = [
 		options: [
 			{ name: 'Credit Card (100)', value: 100 },
 			{ name: 'Bit (120)', value: 120 },
-			{ name: 'Apple Pay (150)', value: 150 },
-			{ name: 'Google Pay (160)', value: 160 },
+			{ name: 'Google Pay (150)', value: 150 },
+			{ name: 'Apple Pay (160)', value: 160 },
 		],
 		default: 100,
 		required: true,
@@ -296,8 +296,8 @@ export const paymentFields: INodeProperties[] = [
 		displayName: 'Client (JSON)',
 		name: 'client',
 		type: 'json',
-		default: '{\n  "name": "",\n  "emails": [""]\n}',
-		description: 'Client object as JSON. Pass {"id":"<uuid>"} for an existing client, or {"name":...,"emails":[...]} to create one.',
+		default: '{\n  "name": "",\n  "emails": []\n}',
+		description: 'Client object as JSON. Pass {"id":"<uuid>"} for an existing client, or {"name":...,"emails":[...]} for a new one. Add "add": true to also save the client to the clients list.',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
