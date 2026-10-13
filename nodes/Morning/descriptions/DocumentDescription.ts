@@ -723,6 +723,27 @@ export const documentFields: INodeProperties[] = [
 		},
 	},
 	{
+		displayName: 'Search Text',
+		name: 'searchText',
+		type: 'string',
+		default: '',
+		description:
+			'Free-text search across multiple document fields (client name, description, number, etc.). Sent as multiFieldsText.',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'multiFieldsText',
+				value: '={{ $value ? [$value] : undefined }}',
+			},
+		},
+	},
+	{
 		displayName: 'Statuses',
 		name: 'searchStatus',
 		type: 'multiOptions',
@@ -777,6 +798,31 @@ export const documentFields: INodeProperties[] = [
 				type: 'body',
 				property: 'paymentTypes',
 				value: '={{ $value && $value.length > 0 ? $value : undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Reverse Charge',
+		name: 'searchReverseCharge',
+		type: 'options',
+		options: [
+			{ name: 'Any', value: '' },
+			{ name: 'Only Reverse Charge', value: 'true' },
+			{ name: 'Exclude Reverse Charge', value: 'false' },
+		],
+		default: '',
+		description: 'Filter by reverse-charge (עסקת מע״מ אפס) documents',
+		displayOptions: {
+			show: {
+				resource: ['document'],
+				operation: ['search'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'reverseCharge',
+				value: '={{ $value === "" ? undefined : $value === "true" }}',
 			},
 		},
 	},
