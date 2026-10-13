@@ -11,7 +11,7 @@ Built against the live sandbox API (verified 2026-05-31).
 
 ## Changes in 0.2.x
 
-- **Payment → Charge Token** now sends the required document fields (document type, currency, language, VAT type, description, amount). Previously every call failed with error 2403.
+- **Payment → Charge Token** now sends the required `type`, `currency`, `vatType` and `lang`, plus optional `maxPayments`, `income`, `remarks` and `notifyUrl`. Previously every call failed with error 2403.
 - **Document → Create/Preview `vatType`** is relabeled to Morning's real document-level meaning (0 Default, 1 Exempt, 2 Mixed) and the default changed from 1 to 0. Documents created with the old default were issued with 0% VAT. A node that saved the old value 2 ("VAT exempt") now means "Mixed"; set 1 for exempt.
 - **Apple Pay / Google Pay labels corrected.** The wire values are unchanged (150 = Google Pay, 160 = Apple Pay), but a node saved as "Apple Pay (150)" was always sending Google Pay.
 - **Errors in 2xx bodies now raise an error**, for example Create Payment Form returning `success: false`.
