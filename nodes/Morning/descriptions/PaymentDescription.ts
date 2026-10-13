@@ -1,5 +1,5 @@
 import { INodeProperties } from 'n8n-workflow';
-import { autoComputeAmountPreSend } from '../helpers';
+import { autoComputeAmountPreSend, chargeIncomePreSend } from '../helpers';
 
 export const paymentOperations: INodeProperties[] = [
 	{
@@ -71,6 +71,9 @@ export const paymentOperations: INodeProperties[] = [
 					request: {
 						method: 'POST',
 						url: '=/payments/tokens/{{ $parameter["tokenId"] }}/charge',
+					},
+					send: {
+						preSend: [chargeIncomePreSend],
 					},
 				},
 			},
@@ -553,11 +556,16 @@ export const paymentFields: INodeProperties[] = [
 	{
 		displayName: 'Currency',
 		name: 'chargeCurrency',
-		type: 'string',
+		type: 'options',
+		options: [
+			{ name: 'ILS (₪)', value: 'ILS' },
+			{ name: 'USD ($)', value: 'USD' },
+			{ name: 'EUR (€)', value: 'EUR' },
+			{ name: 'GBP (£)', value: 'GBP' },
+		],
 		required: true,
 		default: 'ILS',
-		description:
-			'Currency code of the charge (ILS, USD, EUR or GBP)',
+		description: 'Currency of the charge',
 		displayOptions: {
 			show: {
 				resource: ['payment'],
@@ -642,14 +650,6 @@ export const paymentFields: INodeProperties[] = [
 			show: {
 				resource: ['payment'],
 				operation: ['chargeToken'],
-			},
-		},
-		routing: {
-			send: {
-				type: 'body',
-				property: 'income',
-				value:
-					"={{ (() => { const v = typeof $value === 'string' ? JSON.parse($value || '[]') : $value; return Array.isArray(v) && v.length ? v : undefined; })() }}",
 			},
 		},
 	},

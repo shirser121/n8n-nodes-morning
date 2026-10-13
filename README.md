@@ -9,6 +9,16 @@ Full coverage of the API surfaces a real workflow needs: documents, clients, sup
 
 Built against the live sandbox API (verified 2026-05-31).
 
+## Changes in 0.2.x
+
+- **Payment → Charge Token** now sends the required document fields (document type, currency, language, VAT type, description, amount). Previously every call failed with error 2403.
+- **Document → Create/Preview `vatType`** is relabeled to Morning's real document-level meaning (0 Default, 1 Exempt, 2 Mixed) and the default changed from 1 to 0. Documents created with the old default were issued with 0% VAT. A node that saved the old value 2 ("VAT exempt") now means "Mixed"; set 1 for exempt.
+- **Apple Pay / Google Pay labels corrected.** The wire values are unchanged (150 = Google Pay, 160 = Apple Pay), but a node saved as "Apple Pay (150)" was always sending Google Pay.
+- **Errors in 2xx bodies now raise an error**, for example Create Payment Form returning `success: false`.
+- Document → Create has a new `Link Type` field (related or cancels the linked document).
+- Client emails are now optional.
+- Document → Search has number and description filters.
+
 ## What's included
 
 ### Credentials: `Morning (Green Invoice) API`
@@ -102,7 +112,7 @@ The **Morning** node and **Morning Trigger** appear in the node panel.
 - **Field naming** is non-obvious. The node uses Morning's exact names: `income` (not `items`), `payment` singular (not `payments`), `emails` always array (not `email`), `lang` (not `language`), `remarks` (not `notes`).
 - **`vatType` differs by operation.** Document → Create/Preview sends the spec's *document-level* `vatType` (0 = default by business type, 1 = exempt — the whole document gets 0% VAT, 2 = mixed); VAT per line goes in each `income` line's own `vatType` (0 = VAT added, 1 = VAT included, 2 = exempt). Payment → Create Payment Form keeps its own dropdown (0 = before VAT, 1 = VAT included, 2 = exempt), because Morning's `/payments/form` treats `1` as VAT included, contrary to the spec.
 - **Apple Pay / Google Pay codes** — `150` = Google Pay, `160` = Apple Pay (per Morning's `PaymentPluginGroup`), in both Document → Create's online payment and Payment → Create Payment Form.
-- **Errors are surfaced, not swallowed** — Morning error bodies (`{ errorCode, errorMessage }`, 4xx responses, and `/payments/form`'s HTTP 201 `{ success: false, errorCode, errorDescription }`) fail the node with `Morning error <code>: <message>`; the raw response body is in the error description. Successful responses are unchanged.
+- **Errors are surfaced, not swallowed** — 4xx/5xx responses fail the node through n8n's standard error handling, and a 2xx body that carries an error (`{ success: false }` or a non-zero `errorCode`, as `/payments/form` returns with HTTP 201) fails it with `Morning error <code>: <message>`; the raw response body (up to 2000 characters) is in the error description. Other successful responses are unchanged.
 - **Document → Create `Link Type`** (`link` = related, `cancel` = cancels the linked document) is sent only when `Linked Document IDs` is set.
 - **VAT math** — `amount` must match `income[]` based on `vatType`. The Auto-Compute toggle on payment-form does this for you. Manual math also works — the VAT-type dropdown spells out which mode means what.
 - **Documents are immutable** — there is no Update operation on Document, because Morning returns 405. To fix an issued doc, create a credit note (type 330) with `linkedDocumentIds`, then issue a new one.

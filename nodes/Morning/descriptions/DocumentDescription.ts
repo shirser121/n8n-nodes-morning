@@ -399,7 +399,8 @@ export const documentFields: INodeProperties[] = [
 			send: {
 				type: 'body',
 				property: 'linkType',
-				value: '={{ $parameter["linkedDocumentIds"] ? $value : undefined }}',
+				value:
+					'={{ String($parameter["linkedDocumentIds"] || "").split(",").map(s => s.trim()).filter(Boolean).length ? $value : undefined }}',
 			},
 		},
 	},
