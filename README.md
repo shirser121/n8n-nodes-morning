@@ -44,6 +44,8 @@ Built against the live sandbox API (verified 2026-05-31).
 >
 > **Document → Create's "Enable Online Payment"** attaches an online payment link (credit card / Bit / Apple Pay / Google Pay) directly to the document being created — the same one-call flow Morning's own web app uses when you toggle online payment on a Tax Invoice. It sends `paymentRequestData: { plugins: [{ id: pluginId, type: 12200, group }, ...], maxPayments }` in the *same* `POST /documents` body (not a separate `/payments/form` call); the response carries a `paymentRequestId`, and once the customer pays, Morning auto-issues a linked receipt and closes the document. This is distinct from **Payment → Create Payment Form**, which always creates a brand-new combo document (320/400/405) from scratch rather than attaching a payment link to an existing/being-created document. Undocumented in Morning's Apiary reference — reverse-engineered from a live sandbox request captured from the web app's network traffic.
 
+> **Payment → Charge Token** (`POST /payments/tokens/{id}/charge`) requires `type` (320 / 400 / 405 / 600), `amount`, `currency`, `vatType` and `lang`; Morning issues a document of that type and returns it (including `transactionId`). The `vatType` here is **document-level** (0 = default by business type, 1 = exempt, 2 = mixed), unlike the line-item `vatType` inside `income` (0 = VAT added, 1 = VAT included, 2 = exempt). `income` is optional: when omitted, Morning creates one row from `description` + `amount`.
+
 ### Trigger: `Morning Trigger`
 - Receives the form-urlencoded webhook Morning POSTs to `notifyUrl` after a payment
 - Optional `?token=` query-param verification (Morning does not sign webhooks, so this is the recommended guard)

@@ -65,7 +65,8 @@ export const paymentOperations: INodeProperties[] = [
 				name: 'Charge Token',
 				value: 'chargeToken',
 				action: 'Charge a saved credit-card token',
-				description: 'Charge a previously-saved card without re-entering details',
+				description:
+					'Charge a previously-saved card without re-entering details. On success Morning issues a document of the chosen type; the response is that document (includes transactionId)',
 				routing: {
 					request: {
 						method: 'POST',
@@ -523,6 +524,175 @@ export const paymentFields: INodeProperties[] = [
 		},
 		routing: {
 			send: { type: 'body', property: 'description' },
+		},
+	},
+	{
+		displayName: 'Document Type',
+		name: 'chargeDocumentType',
+		type: 'options',
+		options: [
+			{ name: 'Tax Invoice / Receipt (Recommended)', value: 320 },
+			{ name: 'Receipt', value: 400 },
+			{ name: 'Donation Receipt', value: 405 },
+			{ name: 'Deposit Receipt', value: 600 },
+		],
+		required: true,
+		default: 320,
+		description:
+			'Type of document Morning issues when the charge succeeds',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['chargeToken'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'type' },
+		},
+	},
+	{
+		displayName: 'Currency',
+		name: 'chargeCurrency',
+		type: 'string',
+		required: true,
+		default: 'ILS',
+		description:
+			'Currency code of the charge (ILS, USD, EUR or GBP)',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['chargeToken'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'currency' },
+		},
+	},
+	{
+		displayName: 'Language',
+		name: 'chargeLang',
+		type: 'options',
+		options: [
+			{ name: 'Hebrew', value: 'he' },
+			{ name: 'English', value: 'en' },
+		],
+		required: true,
+		default: 'he',
+		description:
+			'Language of the issued document',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['chargeToken'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'lang' },
+		},
+	},
+	{
+		displayName: 'Document VAT Type',
+		name: 'chargeVatType',
+		type: 'options',
+		options: [
+			{ name: 'Default (By Business Type)', value: 0 },
+			{ name: 'Exempt', value: 1 },
+			{ name: 'Mixed', value: 2 },
+		],
+		required: true,
+		default: 0,
+		description:
+			'VAT treatment of the whole document. Differs from the line-item vatType (0 = VAT added, 1 = VAT included, 2 = exempt) used in Income Lines.',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['chargeToken'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'vatType' },
+		},
+	},
+	{
+		displayName: 'Max Payments',
+		name: 'chargeMaxPayments',
+		type: 'number',
+		typeOptions: { minValue: 1, maxValue: 36 },
+		default: 1,
+		description:
+			'Maximum number of instalments (1-36)',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['chargeToken'],
+			},
+		},
+		routing: {
+			send: { type: 'body', property: 'maxPayments' },
+		},
+	},
+	{
+		displayName: 'Income Lines (JSON Array)',
+		name: 'chargeIncome',
+		type: 'json',
+		default: '[]',
+		description:
+			'Optional line items as a JSON array; each has description, quantity, price, currency and vatType (0 = VAT added, 1 = VAT included, 2 = exempt), plus optional catalogNum. Leave empty to let Morning create one row from the description and amount.',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['chargeToken'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'income',
+				value:
+					"={{ (() => { const v = typeof $value === 'string' ? JSON.parse($value || '[]') : $value; return Array.isArray(v) && v.length ? v : undefined; })() }}",
+			},
+		},
+	},
+	{
+		displayName: 'Remarks',
+		name: 'chargeRemarks',
+		type: 'string',
+		default: '',
+		description:
+			'Free-text remarks printed on the issued document',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['chargeToken'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'remarks',
+				value: '={{ $value || undefined }}',
+			},
+		},
+	},
+	{
+		displayName: 'Notify URL (server-to-server)',
+		name: 'chargeNotifyUrl',
+		type: 'string',
+		default: '',
+		description:
+			'HTTPS URL Morning notifies after a successful charge',
+		displayOptions: {
+			show: {
+				resource: ['payment'],
+				operation: ['chargeToken'],
+			},
+		},
+		routing: {
+			send: {
+				type: 'body',
+				property: 'notifyUrl',
+				value: '={{ $value || undefined }}',
+			},
 		},
 	},
 
