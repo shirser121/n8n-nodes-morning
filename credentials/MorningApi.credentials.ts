@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import {
 	ICredentialDataDecryptedObject,
 	ICredentialTestRequest,
@@ -12,6 +13,7 @@ import {
 const SANDBOX_AUTH_BASE = 'https://api.sandbox.morning.dev';
 const PRODUCTION_AUTH_BASE = 'https://api.morning.co';
 
+const TOKEN_TIMEOUT_MS = 15000;
 const REFRESH_MARGIN_MS = 5 * 60 * 1000;
 const FALLBACK_LIFETIME_MS = 50 * 60 * 1000;
 
@@ -20,7 +22,8 @@ const tokenCache = new Map<string, CachedToken>();
 const inFlight = new Map<string, Promise<CachedToken>>();
 
 function cacheKey(credentials: ICredentialDataDecryptedObject): string {
-	return `${credentials.environment}:${credentials.apiKeyId}`;
+	const secretHash = createHash('sha256').update(String(credentials.apiKeySecret)).digest('hex');
+	return `${credentials.environment}:${credentials.apiKeyId}:${secretHash.slice(0, 16)}`;
 }
 
 /** Drop the cached bearer token so the next request fetches a fresh one. */
@@ -38,15 +41,22 @@ function expiryToMs(expiresAt: unknown): number {
 async function fetchToken(credentials: ICredentialDataDecryptedObject): Promise<CachedToken> {
 	const authBase =
 		credentials.environment === 'production' ? PRODUCTION_AUTH_BASE : SANDBOX_AUTH_BASE;
-	const res = await fetch(`${authBase}/idp/v1/oauth/token`, {
-		method: 'POST',
-		headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-		body: JSON.stringify({
-			grant_type: 'client_credentials',
-			client_id: credentials.apiKeyId,
-			client_secret: credentials.apiKeySecret,
-		}),
-	});
+	let res: Response;
+	try {
+		res = await fetch(`${authBase}/idp/v1/oauth/token`, {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+			body: JSON.stringify({
+				grant_type: 'client_credentials',
+				client_id: credentials.apiKeyId,
+				client_secret: credentials.apiKeySecret,
+			}),
+			signal: AbortSignal.timeout(TOKEN_TIMEOUT_MS),
+		});
+	} catch (error) {
+		const reason = (error as Error).name === 'TimeoutError' ? `timed out after ${TOKEN_TIMEOUT_MS / 1000}s` : (error as Error).message;
+		throw new Error(`Morning token request failed: ${reason}`);
+	}
 	const text = await res.text();
 	let data: Record<string, unknown> = {};
 	try {
