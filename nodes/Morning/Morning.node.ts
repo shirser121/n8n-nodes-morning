@@ -53,6 +53,7 @@ export class Morning implements INodeType {
 			},
 		],
 		requestDefaults: {
+			ignoreHttpStatusErrors: true,
 			baseURL:
 				'={{ $credentials.environment === "production" ? "https://api.greeninvoice.co.il/api/v1" : "https://sandbox.d.greeninvoice.co.il/api/v1" }}',
 			headers: {

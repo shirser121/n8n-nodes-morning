@@ -294,12 +294,11 @@ export async function chargeIncomePreSend(
 }
 
 /**
- * PostReceive hook: surface Morning errors carried in successful (2xx) responses as a NodeApiError.
- *
- * `/payments/form` returns HTTP 201 with `{ success: false, errorCode, errorDescription }`. 4xx/5xx
- * responses are thrown by n8n itself, which keeps the 401 token-refresh retry working. A split of a
- * top-level array body into one item per element is done here because a postReceive hook disables
- * n8n's automatic split.
+ * Surfaces every Morning failure as `Morning error <code>: <message>`. The request runs with
+ * `ignoreHttpStatusErrors`, so 4xx/5xx responses reach this hook with their body. Also covers
+ * `/payments/form`, which answers HTTP 201 with `{ success: false, errorCode, errorDescription }`.
+ * A top-level array body is split into one item per element here because a postReceive hook
+ * disables n8n's automatic split.
  */
 export async function morningErrorPostReceive(
 	this: IExecuteSingleFunctions,
@@ -313,11 +312,19 @@ export async function morningErrorPostReceive(
 			: undefined;
 	const errorCode = record?.errorCode;
 	const hasErrorCode = errorCode !== undefined && errorCode !== null && Number(errorCode) !== 0;
+	const httpFailed = response.statusCode >= 400;
 
-	if (hasErrorCode || record?.success === false) {
+	if (hasErrorCode || record?.success === false || httpFailed) {
 		const code = hasErrorCode ? errorCode : response.statusCode;
-		const message = String(record?.errorMessage ?? record?.errorDescription ?? 'Unknown error');
-		const raw = JSON.stringify(body) ?? '';
+		const bodyText = typeof body === 'string' && body.trim() !== '' ? body.trim() : undefined;
+		const message = String(
+			record?.errorMessage ??
+				record?.errorDescription ??
+				record?.message ??
+				bodyText ??
+				(httpFailed ? `HTTP ${response.statusCode}` : 'Unknown error'),
+		);
+		const raw = (Buffer.isBuffer(body) ? body.toString('utf8') : JSON.stringify(body)) ?? '';
 		throw new NodeApiError(this.getNode(), (record ?? {}) as JsonObject, {
 			message: `Morning error ${code}: ${message}`,
 			description: raw.length > 2000 ? `${raw.slice(0, 2000)}…` : raw,
