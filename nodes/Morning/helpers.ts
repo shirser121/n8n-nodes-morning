@@ -8,6 +8,7 @@ import {
 	NodeApiError,
 	NodeOperationError,
 } from 'n8n-workflow';
+import { clearMorningToken } from '../../credentials/MorningApi.credentials';
 
 /**
  * Validate an Israeli tax ID (ת.ז or ח.פ) against the official mod-10 checksum.
@@ -313,6 +314,11 @@ export async function morningErrorPostReceive(
 	const errorCode = record?.errorCode;
 	const hasErrorCode = errorCode !== undefined && errorCode !== null && Number(errorCode) !== 0;
 	const httpFailed = response.statusCode >= 400;
+
+	if (response.statusCode === 401) {
+		const credentials = await this.getCredentials('morningApi');
+		clearMorningToken(credentials);
+	}
 
 	if (hasErrorCode || record?.success === false || httpFailed) {
 		const code = hasErrorCode ? errorCode : response.statusCode;

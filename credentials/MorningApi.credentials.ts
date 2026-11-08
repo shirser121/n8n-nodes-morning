@@ -1,9 +1,8 @@
 import {
-	IAuthenticateGeneric,
 	ICredentialDataDecryptedObject,
 	ICredentialTestRequest,
 	ICredentialType,
-	IHttpRequestHelper,
+	IHttpRequestOptions,
 	INodeProperties,
 } from 'n8n-workflow';
 
@@ -12,6 +11,74 @@ import {
 // other call — see https://developers.morning.co.
 const SANDBOX_AUTH_BASE = 'https://api.sandbox.morning.dev';
 const PRODUCTION_AUTH_BASE = 'https://api.morning.co';
+
+const REFRESH_MARGIN_MS = 5 * 60 * 1000;
+const FALLBACK_LIFETIME_MS = 50 * 60 * 1000;
+
+type CachedToken = { token: string; expiresAtMs: number };
+const tokenCache = new Map<string, CachedToken>();
+const inFlight = new Map<string, Promise<CachedToken>>();
+
+function cacheKey(credentials: ICredentialDataDecryptedObject): string {
+	return `${credentials.environment}:${credentials.apiKeyId}`;
+}
+
+/** Drop the cached bearer token so the next request fetches a fresh one. */
+export function clearMorningToken(credentials: ICredentialDataDecryptedObject): void {
+	tokenCache.delete(cacheKey(credentials));
+}
+
+/** Morning returns `expiresAt` as epoch seconds; milliseconds and missing values are tolerated. */
+function expiryToMs(expiresAt: unknown): number {
+	const n = Number(expiresAt);
+	if (!Number.isFinite(n) || n <= 0) return Date.now() + FALLBACK_LIFETIME_MS;
+	return n < 1e12 ? n * 1000 : n;
+}
+
+async function fetchToken(credentials: ICredentialDataDecryptedObject): Promise<CachedToken> {
+	const authBase =
+		credentials.environment === 'production' ? PRODUCTION_AUTH_BASE : SANDBOX_AUTH_BASE;
+	const res = await fetch(`${authBase}/idp/v1/oauth/token`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+		body: JSON.stringify({
+			grant_type: 'client_credentials',
+			client_id: credentials.apiKeyId,
+			client_secret: credentials.apiKeySecret,
+		}),
+	});
+	const text = await res.text();
+	let data: Record<string, unknown> = {};
+	try {
+		data = JSON.parse(text) as Record<string, unknown>;
+	} catch {
+		// non-JSON body: reported through the status below
+	}
+	if (!res.ok || typeof data.accessToken !== 'string' || data.accessToken === '') {
+		const detail = data.errorMessage ?? data.message ?? (text.slice(0, 200) || `HTTP ${res.status}`);
+		const code = data.errorCode ?? res.status;
+		throw new Error(`Morning token request failed (${code}): ${String(detail)}. Check API key id/secret.`);
+	}
+	return { token: data.accessToken, expiresAtMs: expiryToMs(data.expiresAt) };
+}
+
+async function getMorningToken(credentials: ICredentialDataDecryptedObject): Promise<string> {
+	const key = cacheKey(credentials);
+	const cached = tokenCache.get(key);
+	if (cached && cached.expiresAtMs - Date.now() > REFRESH_MARGIN_MS) return cached.token;
+
+	let pending = inFlight.get(key);
+	if (!pending) {
+		pending = fetchToken(credentials)
+			.then((fresh) => {
+				tokenCache.set(key, fresh);
+				return fresh;
+			})
+			.finally(() => inFlight.delete(key));
+		inFlight.set(key, pending);
+	}
+	return (await pending).token;
+}
 
 export class MorningApi implements ICredentialType {
 	name = 'morningApi';
@@ -45,54 +112,16 @@ export class MorningApi implements ICredentialType {
 			default: '',
 			required: true,
 		},
-		{
-			displayName: 'Session Token',
-			name: 'sessionToken',
-			type: 'hidden',
-			typeOptions: {
-				expirable: true,
-			},
-			default: '',
-		},
 	];
 
-	async preAuthentication(
-		this: IHttpRequestHelper,
+	async authenticate(
 		credentials: ICredentialDataDecryptedObject,
-	): Promise<{ sessionToken: string }> {
-		const authBase =
-			(credentials.environment as string) === 'production'
-				? PRODUCTION_AUTH_BASE
-				: SANDBOX_AUTH_BASE;
-
-		const response = (await this.helpers.httpRequest({
-			method: 'POST',
-			url: `${authBase}/idp/v1/oauth/token`,
-			body: {
-				grant_type: 'client_credentials',
-				client_id: credentials.apiKeyId,
-				client_secret: credentials.apiKeySecret,
-			},
-			json: true,
-		})) as { accessToken: string; tokenType: string; expiresAt: number };
-
-		if (!response?.accessToken) {
-			throw new Error(
-				'Morning /idp/v1/oauth/token did not return an access token. Check API key id/secret.',
-			);
-		}
-
-		return { sessionToken: response.accessToken };
+		requestOptions: IHttpRequestOptions,
+	): Promise<IHttpRequestOptions> {
+		const token = await getMorningToken(credentials);
+		requestOptions.headers = { ...requestOptions.headers, Authorization: `Bearer ${token}` };
+		return requestOptions;
 	}
-
-	authenticate: IAuthenticateGeneric = {
-		type: 'generic',
-		properties: {
-			headers: {
-				Authorization: '=Bearer {{ $credentials.sessionToken }}',
-			},
-		},
-	};
 
 	test: ICredentialTestRequest = {
 		request: {

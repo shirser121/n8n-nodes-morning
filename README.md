@@ -133,7 +133,7 @@ Morning **does not sign webhooks**. Anything that knows your `notifyUrl` can for
 
 ## Notes for production
 
-- The session token is cached for ~50 minutes (TTL is 60). The `expirable: true` flag on the credential's session token field tells n8n to re-call `preAuthentication` when needed.
+- The bearer token is cached in memory per environment and API key id, and is renewed when fewer than 5 minutes remain before it expires (50 minutes is assumed if Morning gives no expiry). Concurrent calls share one token request, and a 401 response drops the cached token so the next run fetches a new one.
 - The `notifyUrl` callback comes from AWS eu-west-1 (`34.255.212.236` observed) with `User-Agent: GreenInvoice/2.1`.
 - Body is **`application/x-www-form-urlencoded`** — n8n parses it automatically into `req.body`.
 - Be idempotent on `documentId` — Morning may retry on 5xx/timeout.
